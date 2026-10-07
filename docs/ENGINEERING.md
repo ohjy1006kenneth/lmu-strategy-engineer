@@ -95,6 +95,44 @@ Rules:
 - Persistence stores lap/session/model history but does not decide strategy.
 - WPF App and Overlay consume strategy results; they do not own strategy equations.
 
+## Development and test topology
+
+Hermes runs on a Raspberry Pi 5 / Raspberry Pi OS, so keep most of the solution cross-platform.
+
+~~~text
+Raspberry Pi / Linux
+- Domain
+- Strategy
+- Simulation
+- Persistence
+- LMU adapter abstractions
+- xUnit + 17 canonical simulations
+
+GitHub Actions / Windows
+- full solution build
+- WPF/XAML compile
+- Windows-only tests
+- win-x64 publish check
+
+Windows gaming PC / real LMU
+- shared-memory/REST verification
+- overlay behavior
+- Raw Input / wheel controls
+- live integration validation
+~~~
+
+Keep Windows-specific code isolated in Windows-targeted projects such as:
+
+~~~text
+LmuStrategy.LmuAdapter.Windows
+LmuStrategy.Windows
+LmuStrategy.Overlay
+~~~
+
+Core projects should target normal `net10.0` and remain runnable on Linux.
+
+The simulator and test doubles must exercise the same strategy APIs used by production, so Hermes can develop and regression-test backend behavior without LMU installed.
+
 ## Runtime data flow
 
 ~~~text
