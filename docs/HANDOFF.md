@@ -9,9 +9,10 @@ Read these files in order:
 1. `README.md`
 2. `docs/PRODUCT.md`
 3. `docs/ENGINEERING.md`
-4. `docs/TESTING.md`
-5. `docs/RESEARCH.md`
-6. `prototype/index.html`
+4. `docs/BACKEND.md`
+5. `docs/TESTING.md`
+6. `docs/RESEARCH.md`
+7. `prototype/index.html`
 
 If the prototype conflicts with the documentation, follow the documentation. The prototype contains synthetic data and temporary equations.
 
@@ -82,13 +83,18 @@ Before polished UI:
 2. implement unit-aware domain types,
 3. implement `StrategyInput`, `StrategyResult`, `RacePlan`, `Stint` and `Pit`,
 4. implement the reusable deterministic simulator described in `docs/TESTING.md`,
-5. implement a basic arbitrary-length Flat Out planner,
-6. enforce Fuel/VE/tyre invariants,
-7. create LMU adapter interfaces plus capability detection,
-8. establish SQLite schema/migrations,
-9. add structured logging and repeatable tests.
+5. implement the plan evaluator and backend contracts in `docs/BACKEND.md`,
+6. implement a basic arbitrary-length Flat Out planner,
+7. enforce Fuel/VE/tyre invariants,
+8. create LMU adapter interfaces plus capability detection,
+9. establish SQLite schema/migrations,
+10. add structured logging and repeatable tests.
 
 Then begin wiring verified LMU data.
+
+## Backend source of truth
+
+`docs/BACKEND.md` is the source of truth for strategy equations, plan scoring, candidate generation, weather fallback mathematics and backend function boundaries. Do not derive production equations from `prototype/index.html`.
 
 ## Strategy implementation order
 
