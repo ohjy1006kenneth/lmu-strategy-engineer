@@ -62,7 +62,13 @@ Test:
 - wet -> dry,
 - repeated crossover,
 - no personal wet data,
-- personal wet model becoming available mid-race.
+- normalized same-car field fallback,
+- same-class fallback when same-car samples are unavailable,
+- fastest-opponent absolute pace is **not** copied directly,
+- insufficient/dirty field samples disable or lower confidence of the fallback,
+- field fallback transitions to personal Wet model after enough valid personal Wet laps,
+- personal wet model becoming available mid-race,
+- hysteresis prevents repeated Slick/Wet strategy flicker around crossover.
 
 ## Race control / failures
 
