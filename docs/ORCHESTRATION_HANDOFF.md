@@ -43,6 +43,21 @@ The original browser prototype used synthetic data.
 
 Do not recreate or wrap the browser prototype as the production application; implement the documented behavior using the production architecture.
 
+## Production technology decision
+
+Use this stack unless the user explicitly revisits the decision:
+
+- C# / **.NET 10 LTS**
+- **WPF** for desktop UI and overlay
+- pure C# domain/strategy libraries with no UI dependency
+- SQLite via `Microsoft.Data.Sqlite`
+- LMU shared memory + verified local REST through a dedicated adapter
+- Windows Raw Input / HID for global wheel/button input
+- xUnit for tests
+- structured logging (Serilog preferred)
+
+The committed `prototype/index.html` is **only an executable UX/product specification**. Do not use Electron, Tauri, React, WebView, or the HTML prototype as the production application architecture.
+
 ## First implementation objective
 
 Create a maintainable production skeleton that can be extended by multiple coding agents.
