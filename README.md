@@ -58,10 +58,13 @@ Start here if you are implementing or orchestrating work:
 10. [Engineering Decisions](docs/DECISIONS.md)
 11. [Roadmap](docs/ROADMAP.md)
 12. [Research Notes](docs/RESEARCH_NOTES.md)
+13. [Open Questions](docs/OPEN_QUESTIONS.md)
 
 ## Prototype
 
-The latest validated prototype behavior is documented at [prototype/README.md](prototype/README.md). The original browser prototype used synthetic data and was a product-design artifact, not production code.
+The latest interactive prototype is at [prototype/index.html](prototype/index.html), with a concise behavior reference at [prototype/README.md](prototype/README.md). It uses synthetic data and is a product-design artifact, not production code.
+
+Historical stress-test artifacts are committed under `tests/simulations/`.
 
 ## Current implementation priority
 
