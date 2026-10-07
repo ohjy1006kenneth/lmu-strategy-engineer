@@ -108,7 +108,7 @@ Before implementing polished UI:
 1. establish solution/project structure,
 2. implement domain records/types,
 3. implement StrategyInput / RacePlan / Stint / Pit / StrategyResult,
-4. implement deterministic simulation harness,
+4. implement the reusable deterministic simulation engine described in docs/TESTING.md,
 5. implement a basic Flat Out arbitrary-length planner,
 6. encode invariants from docs/TESTING.md,
 7. implement LMU adapter interfaces without fabricating unavailable data,
@@ -150,16 +150,7 @@ Do not optimize premature details before the plan representation is correct.
 
 Every behavior-changing strategy PR should add or update deterministic simulation coverage.
 
-At minimum, regularly run:
-- short no-stop sprint,
-- one-stop race,
-- race with splash-stop opportunity,
-- Fuel Save eliminates a stop,
-- long endurance multi-stop race,
-- dry -> wet -> dry,
-- telemetry dropout,
-- missed pit,
-- dry tyre allocation pressure.
+The canonical regression suite is the 17 timed-race scenarios defined in docs/TESTING.md. Run those primarily with the Average driver on every commit. Use Fast/Casual profiles and multi-seed stress runs in extended/nightly testing.
 
 ## Agent coordination guidance
 
@@ -202,3 +193,12 @@ A strong first implementation pass should leave the repository with:
 - concise developer setup instructions.
 
 It does not need polished production UI yet.
+
+## Simulation output policy
+
+Write canonical scenario outputs under `simulation-results/<ScenarioName>/` using fixed names:
+- `report.md`
+- `summary.json`
+- `lap_log.csv`
+
+Overwrite those files on each run. Do not create timestamped committed output trees. Use Git history for history. Randomized stress-run output should normally remain uncommitted temporary/build output.
