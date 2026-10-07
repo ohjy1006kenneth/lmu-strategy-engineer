@@ -61,11 +61,7 @@ Start here if you are implementing or orchestrating work:
 
 ## Prototype
 
-The latest UX/strategy prototype is stored at:
-
-`prototype/index.html`
-
-Open it directly in a browser. It contains synthetic data and should be treated as an executable product specification, not production code.
+The latest validated prototype behavior is documented at [prototype/README.md](prototype/README.md). The original browser prototype used synthetic data and was a product-design artifact, not production code.
 
 ## Current implementation priority
 
