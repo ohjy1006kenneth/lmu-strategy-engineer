@@ -19,7 +19,7 @@ If documents appear to conflict, use this order:
 7. docs/LMU_INTEGRATION.md
 8. docs/TESTING.md
 9. docs/ROADMAP.md
-10. prototype/index.html
+10. prototype/README.md
 
 The prototype is an executable UX reference, but some internal mock equations/constants are intentionally temporary.
 
@@ -27,7 +27,7 @@ The prototype is an executable UX reference, but some internal mock equations/co
 
 There is no production LMU application yet.
 
-The existing browser prototype demonstrates:
+The prototype behavior specification documents:
 - pre-race strategy UX,
 - Flat Out / Fuel Save selection,
 - editable strategy,
@@ -37,9 +37,9 @@ The existing browser prototype demonstrates:
 - live Updated Strategy state,
 - Keep Current / Replace actions.
 
-Its data is synthetic.
+The original browser prototype used synthetic data.
 
-Do not simply wrap the HTML prototype and call that the production application.
+Do not recreate or wrap the browser prototype as the production application; implement the documented behavior using the production architecture.
 
 ## First implementation objective
 
