@@ -71,9 +71,22 @@ The intended Auto flow is:
 
 ## Opponent data
 
-Opponent lap/sector timing may be useful for a temporary weather fallback.
+Opponent lap/sector timing may be useful for a temporary weather fallback when the user has no personal Wet model.
+
+The intended fallback is **relative normalization**, not copying an opponent's absolute pace:
+
+- establish representative Dry and Wet pace for each usable opponent,
+- compute each opponent's Wet/Dry pace ratio,
+- prefer same-car opponents, otherwise same-class opponents,
+- reject pit laps, neutralized laps, incidents and unstable samples,
+- combine ratios with a robust median/trimmed statistic,
+- multiply the user's own Dry baseline by that field ratio to estimate temporary Wet pace.
+
+This is only valid if the current LMU build exposes enough online scoring/timing data to support it.
 
 Do not assume opponent fuel, VE, or tyre wear is externally observable online.
+
+If opponent tyre compound is not reliably exposed, do not label a field lap as a Wet-tyre sample purely from weather. Use only evidence the adapter can verify, or reduce/disable the fallback.
 
 ## Pit service estimate
 
