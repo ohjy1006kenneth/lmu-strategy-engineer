@@ -19,7 +19,9 @@ If documents appear to conflict, use this order:
 7. docs/LMU_INTEGRATION.md
 8. docs/TESTING.md
 9. docs/ROADMAP.md
-10. prototype/README.md
+10. docs/OPEN_QUESTIONS.md
+11. prototype/index.html
+12. prototype/README.md
 
 The prototype is an executable UX reference, but some internal mock equations/constants are intentionally temporary.
 
@@ -27,7 +29,7 @@ The prototype is an executable UX reference, but some internal mock equations/co
 
 There is no production LMU application yet.
 
-The prototype behavior specification documents:
+The committed browser prototype and its behavior specification demonstrate:
 - pre-race strategy UX,
 - Flat Out / Fuel Save selection,
 - editable strategy,
