@@ -18,7 +18,10 @@ Current / mostly complete.
 - [ ] Create .NET solution / project structure
 - [ ] Domain objects with explicit units
 - [ ] Pure strategy-core library
-- [ ] Deterministic simulation-test project
+- [ ] Reusable deterministic simulation engine
+- [ ] 17 canonical timed-race scenarios
+- [ ] Fast / Average / Casual driver profiles
+- [ ] Fixed simulation-results overwrite workflow
 - [ ] SQLite persistence project
 - [ ] Structured logging
 - [ ] Capability/version model for LMU adapter
