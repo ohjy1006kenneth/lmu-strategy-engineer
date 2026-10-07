@@ -75,6 +75,18 @@ Windows App / Overlay
 
 The UI can depend on the core. The core must never depend on WPF.
 
+## Development environment
+
+Hermes runs on a Raspberry Pi 5 / Linux.
+
+Do most development and testing there using the cross-platform Domain, Strategy, Simulation, Persistence and adapter-abstraction projects.
+
+Use:
+- Windows GitHub Actions for full WPF/Windows build validation.
+- The Windows gaming PC only for real LMU integration, overlay and wheel/input validation.
+
+Keep Windows-only code isolated so Linux development never blocks backend work.
+
 ## First implementation milestone
 
 Before polished UI:
