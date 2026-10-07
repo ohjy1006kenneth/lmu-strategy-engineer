@@ -11,17 +11,132 @@ Production code should separate four concerns:
 
 The browser prototype is not the production architecture.
 
-## Proposed production stack
+## Chosen production stack
 
-A practical target:
+The production app is **not** the browser prototype.
 
-- C# / .NET for the Windows application and LMU integration.
-- SQLite for persistent local history.
-- Pure strategy/model libraries independent of UI.
-- Windows-capable transparent always-on-top overlay.
-- Raw Input / DirectInput / HID for global wheel/gamepad/keyboard input.
+### Runtime and language
 
-The exact UI framework can be selected during implementation, but the domain layer should not depend on it.
+- **C#**
+- **.NET 10 LTS**
+- Windows-specific projects target `net10.0-windows`.
+
+### Desktop UI
+
+- **WPF on .NET 10**
+- XAML for layout/styles.
+- MVVM for application state and commands.
+- Prefer `CommunityToolkit.Mvvm` for lightweight observable/view-model plumbing.
+
+Why WPF:
+- Windows-only is acceptable for V1.
+- mature Win32 interop,
+- straightforward transparent/borderless windows,
+- suitable for an always-on-top non-activating overlay,
+- easy integration with Raw Input / HID / shared-memory code,
+- strong data binding and custom drawing support.
+
+Do not use Electron, Tauri, React, or a WebView as the primary production UI.
+
+WinUI 3 is a valid modern Windows framework, but for this product WPF is preferred because overlay/window/input interoperability is more important than modern Windows shell styling.
+
+### Strategy and domain
+
+Use pure C# class libraries with **no WPF dependency**:
+
+- `LmuStrategy.Domain`
+- `LmuStrategy.Strategy`
+- `LmuStrategy.Simulation`
+
+The strategy engine must be runnable from unit tests and simulation tools without launching the desktop app.
+
+### LMU integration
+
+- Memory-mapped/shared-memory access in C# for verified LMU shared-memory structures.
+- `HttpClient` for verified local LMU REST/Swagger endpoints.
+- Win32 interop only behind adapter/platform abstractions.
+- Capability detection per current LMU build.
+
+### Persistence
+
+- **SQLite**
+- Prefer `Microsoft.Data.Sqlite` with explicit schema/migrations.
+- Keep persistence DTOs separate from domain objects.
+- Do not store raw high-frequency telemetry unless a future feature truly requires it; persist useful lap/session/model data.
+
+### Overlay and input
+
+Overlay:
+- WPF borderless transparent window.
+- Win32 extended window styles for no-activate / tool-window / click-through behavior when required.
+- always-on-top state controlled explicitly.
+
+Input:
+- **Windows Raw Input / HID** as the primary global wheel/button path.
+- keyboard through Win32/WPF input as appropriate.
+- add specialized controller APIs only when needed; do not make a deprecated DirectInput wrapper a core dependency.
+
+### Strategy visualization
+
+Implement the stint/tyre strategy timeline as a custom WPF control or drawing surface.
+
+Prefer:
+- WPF `DrawingContext` / custom `FrameworkElement`,
+- or SkiaSharp only if profiling/design complexity justifies it later.
+
+Do not embed the HTML graph in a WebView.
+
+### Logging
+
+- structured logging, preferably **Serilog**,
+- rolling local files,
+- diagnostics must never block the telemetry/strategy loop.
+
+### Testing
+
+- **xUnit** for unit and deterministic simulation tests.
+- Keep scenario fixtures serializable and reproducible.
+- Add property/invariant tests where valuable.
+
+### Packaging
+
+Initial development:
+- normal `dotnet`/Visual Studio build.
+
+Distribution:
+- self-contained x64 Windows publish initially,
+- choose installer/update technology only after the core app works.
+- MSIX/Velopack-style packaging can be evaluated later; it is not a Phase 1 dependency.
+
+### Repository layout
+
+~~~text
+src/
+  LmuStrategy.Domain/
+  LmuStrategy.Strategy/
+  LmuStrategy.Simulation/
+  LmuStrategy.Persistence/
+  LmuStrategy.LmuAdapter/
+  LmuStrategy.Windows/
+  LmuStrategy.Overlay/
+
+tests/
+  LmuStrategy.Strategy.Tests/
+  LmuStrategy.Simulation.Tests/
+  LmuStrategy.LmuAdapter.Tests/
+~~~
+
+Dependency rule:
+
+~~~text
+Domain
+  ↑
+Strategy / Simulation / Persistence / LMU Adapter
+  ↑
+Windows App / Overlay
+~~~
+
+The UI can depend on the core. The core must never depend on the UI.
 
 ## Component flow
 
