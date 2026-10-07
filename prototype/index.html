@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LMU Pit Strategy Prototype</title>
+<style>
+:root{--bg:#0b0f14;--panel:#111821;--panel2:#17212c;--text:#edf2f7;--muted:#8995a3;--faint:#53606d;--border:#24313f;--accent:#b7ef49;--green:#5bd488;--red:#ff625c;--amber:#f3b24b;--cyan:#55b9e8}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif}.app{min-height:100vh;display:grid;grid-template-columns:76px 1fr}.rail{border-right:1px solid var(--border);padding:20px 14px;display:flex;flex-direction:column;align-items:center;gap:14px}.logo{width:40px;height:40px;border-radius:12px;background:var(--text);color:var(--bg);display:grid;place-items:center;font-weight:900;margin-bottom:24px}.rail button{width:42px;height:42px;border:1px solid transparent;background:transparent;color:var(--muted);border-radius:11px;cursor:pointer}.rail button.active{background:var(--panel2);border-color:var(--border);color:var(--text)}.spacer{flex:1}.main{padding:28px 34px 46px;max-width:1500px;width:100%;margin:auto}.top{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:18px}.eyebrow,.label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:800}h1{font-size:30px;margin:4px 0 5px}.sub,.muted{font-size:12px;color:var(--muted)}.pill{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--border);background:var(--panel2);border-radius:999px;padding:7px 10px;font-size:10px;font-weight:800}.pill.good{color:var(--green);background:#0f2418}.pill.warn{color:var(--amber);background:#261b0d}.pill.bad{color:var(--red);background:#2b1212}.dot{width:7px;height:7px;border-radius:50%;background:currentColor}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}.toolbar select,.select{background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px 12px}.card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:16px}.grid{display:grid;gap:16px}.two{grid-template-columns:1fr 1fr}.strategy-grid{grid-template-columns:420px minmax(0,1fr)}.racefacts{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}.racefact{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px 14px}.racefact b{display:block;font-size:15px;margin-top:5px}.weather{display:grid;grid-template-columns:190px repeat(4,1fr);gap:14px;align-items:center}.weather>div:not(:first-child){border-left:1px solid var(--border);padding-left:14px}.weather-time{font-size:9px;color:var(--faint);font-weight:800}.weather-main{font-size:15px;font-weight:800;margin-top:3px}.weather-meta{font-size:10px;color:var(--muted)}.controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px}.seg{display:flex;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#0e141b}.seg button{border:0;background:transparent;color:var(--muted);padding:10px 12px;font-weight:800;cursor:pointer}.seg button.active{background:var(--panel2);color:var(--text);box-shadow:inset 0 0 0 1px var(--accent)}.stepper{display:inline-flex;align-items:center;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#0e141b}.stepper button{width:38px;height:40px;border:0;background:transparent;color:var(--muted);font-size:20px;cursor:pointer}.stepper button:disabled{opacity:.25;cursor:not-allowed}.stepper .value{min-width:62px;text-align:center;font-weight:900}.model-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}.model{background:var(--panel2);border-radius:10px;padding:10px;min-width:0}.model strong{display:block;font-size:12px;margin-top:5px}.model small{display:block;color:var(--muted);font-size:10px;margin-top:3px;line-height:1.35}.ready{color:var(--green)}.learning{color:var(--amber)}.blocked{color:var(--red)}.banner{border-radius:10px;padding:11px 13px;margin-bottom:14px;font-size:11px;font-weight:800;border:1px solid}.banner.warn{color:var(--amber);background:#261b0d}.banner.bad{color:var(--red);background:#2b1212}.banner.good{color:var(--green);background:#0f2418}.hero{border-color:#547126}.strategy-name{color:var(--accent);font-size:11px;font-weight:900;letter-spacing:.1em}.strategy-main{font-size:26px;font-weight:900;margin:6px 0}.strategy-head{display:flex;justify-content:space-between;gap:12px}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:18px}.metric{background:var(--panel2);border-radius:10px;padding:10px}.metric b{display:block;font-size:18px;margin-top:5px}.reason{font-size:11px;color:var(--muted);margin-top:13px;line-height:1.45}.alt{display:flex;justify-content:space-between;gap:12px;border:1px solid var(--border);background:var(--panel);border-radius:12px;padding:12px;margin-top:8px}.alt small{display:block;color:var(--muted);font-size:10px;margin-top:4px}.primary,.secondary{border-radius:10px;padding:11px 14px;font-weight:850;cursor:pointer}.primary{border:0;background:var(--accent);color:#12170b}.secondary{border:1px solid var(--border);background:var(--panel2);color:var(--text)}.wide{width:100%;margin-top:14px}.chart-head{display:flex;justify-content:space-between;align-items:center;gap:10px}.chart-toggle{display:flex;background:var(--panel2);border-radius:9px;padding:3px}.chart-toggle button{border:0;background:transparent;color:var(--muted);padding:6px 9px;border-radius:7px;font-size:10px;font-weight:850;cursor:pointer}.chart-toggle button.active{background:#0e141b;color:var(--text)}svg{width:100%;height:auto}.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:10px;color:var(--muted);margin-top:8px}.legend span{display:flex;align-items:center;gap:6px}.sw{width:8px;height:8px;border-radius:50%}.explain,.pitcost{border-top:1px solid var(--border);margin-top:12px;padding-top:12px}.explain{display:grid;grid-template-columns:1fr auto;gap:12px}.net{color:var(--accent);font-weight:900}.pitcost{display:grid;grid-template-columns:80px repeat(3,1fr) auto;gap:10px;align-items:end}.pititem span{display:block;font-size:9px;color:var(--muted);font-weight:800}.pititem b{font-size:12px}.hide{display:none!important}.empty{text-align:center;padding:60px 24px}.empty h2{font-size:22px}.empty p{max-width:620px;margin:auto;color:var(--muted);font-size:12px;line-height:1.55}.backend{margin-top:16px}.backend summary{cursor:pointer;color:var(--muted);font-size:11px;font-weight:800}.backend pre{white-space:pre-wrap;font-size:10px;color:#a9b4c0;background:#080c10;border:1px solid var(--border);border-radius:10px;padding:12px;max-height:320px;overflow:auto}.overlay-page{display:grid;gap:18px;justify-items:center;padding-top:25px}.overlay-shell{width:min(820px,100%);background:#181c21;border:1px dashed #353d47;border-radius:18px;padding:34px}.compact{background:rgba(6,9,12,.97);border:1px solid #303943;border-radius:14px;padding:14px 16px;display:grid;grid-template-columns:repeat(3,1fr);cursor:pointer}.compact-col{padding:0 18px}.compact-col:first-child{padding-left:0}.compact-col:last-child{padding-right:0}.compact-col+.compact-col{border-left:1px solid var(--border)}.target{font-size:22px;font-weight:900;margin-top:5px}.actual{font-size:10px;color:var(--muted);margin-top:5px}.diff{font-size:11px;font-weight:900;margin-top:6px}.green{color:var(--green)}.red{color:var(--red)}.expanded{width:min(620px,100%);background:rgba(6,9,12,.97);border:1px solid #303943;border-radius:14px;padding:18px}.expanded-top{display:flex;justify-content:space-between;gap:12px}.pitbig{font-size:27px;font-weight:900;margin-top:5px}.divider{height:1px;background:var(--border);margin:16px 0}.actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}.press-track{height:4px;background:var(--panel2);border-radius:999px;overflow:hidden;margin-top:12px}.press-fill{height:100%;width:0;background:var(--accent)}.strategy-actions{display:flex;gap:8px;margin-top:10px}.strategy-editor{margin-top:10px;padding:12px}.strategy-rows{max-height:300px;overflow:auto;margin-top:10px;display:grid;gap:8px}.strategy-row{display:grid;grid-template-columns:52px 1fr 1fr 36px;gap:8px;align-items:center;background:var(--panel2);border-radius:10px;padding:8px}.strategy-row input,.strategy-row select{min-width:0;width:100%;background:#0e141b;color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px}.strategy-row .remove{border:0;background:transparent;color:var(--muted);font-size:18px;cursor:pointer}.strategy-row .remove:hover{color:var(--red)}.chart-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.chart-nav{display:flex;gap:5px;align-items:center}.chart-nav .secondary{padding:5px 9px;min-width:34px}.chart-viewport{overflow-x:auto;overflow-y:hidden;margin-top:8px;border-radius:10px;scroll-behavior:smooth}.chart-viewport #chart{height:250px;max-width:none;display:block}.press-fill{transition:width .04s linear}.time-faster{color:var(--green)!important;background:#0f2418!important}.time-slower{color:var(--red)!important;background:#2b1212!important}.time-invalid{color:var(--amber)!important;background:#261b0d!important}
+.stint-strip{display:flex;gap:6px;margin-top:10px;min-height:64px;align-items:stretch}
+.stint-box{position:relative;min-width:78px;border:1px solid var(--border);border-radius:10px;padding:9px 10px;background:var(--panel2);cursor:default;overflow:visible}
+.stint-box .stint-title{font-size:11px;font-weight:900}
+.stint-box .stint-meta{font-size:9px;color:var(--muted);margin-top:3px}
+.stint-box .compound-bar{position:absolute;left:0;right:0;bottom:0;height:7px;border-radius:0 0 9px 9px;opacity:.48}
+.stint-tip{display:none;position:absolute;z-index:20;left:8px;top:calc(100% + 8px);min-width:220px;background:#070a0e;border:1px solid #344250;border-radius:10px;padding:10px 11px;box-shadow:0 14px 35px rgba(0,0,0,.45);font-size:10px;line-height:1.55;color:var(--text)}
+.stint-box:hover .stint-tip,.stint-box:focus-within .stint-tip{display:block}
+.stint-tip b{display:block;margin-bottom:3px;font-size:11px}
+.compound-soft{background:#ff725e}.compound-medium{background:#f0c45c}.compound-hard{background:#c8d0d8}.compound-wet{background:#55b9e8}.compound-auto{background:#8f9aa6}
+.strategy-row{grid-template-columns:46px 1fr 1fr 1fr 36px}
+.strategy-row .vebox,.strategy-row .ratioBox{min-width:0}
+.strategy-row input,.strategy-row select{font-size:12px}
+.strategy-kicker{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.plan-summary{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.plan-chip{border:1px solid var(--border);background:#0e141b;border-radius:9px;padding:7px 9px;font-size:10px;color:var(--muted)}
+
+.strategy-choices{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 12px}
+.strategy-choice{min-height:82px;text-align:left;border:1px solid var(--border);background:var(--panel);color:var(--text);border-radius:12px;padding:11px 12px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center}
+.strategy-choice.active{border-color:var(--accent);box-shadow:inset 0 0 0 1px rgba(183,239,73,.25);background:#151e1a}
+.strategy-choice:disabled{opacity:.38;cursor:not-allowed}
+.strategy-choice .choice-kicker{font-size:9px;letter-spacing:.1em;font-weight:900;color:var(--muted)}
+.strategy-choice strong{font-size:16px;margin-top:5px}
+.strategy-choice small{font-size:10px;color:var(--muted);margin-top:3px;line-height:1.35}
+@media(max-width:620px){.strategy-choices{grid-template-columns:1fr}}
+
+.overlay-plan-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.overlay-status{font-size:9px;font-weight:900;letter-spacing:.09em;color:var(--muted);border:1px solid var(--border);border-radius:999px;padding:4px 7px}
+.overlay-status.updated{color:var(--accent);border-color:#4d6426;background:#16200f}
+.updated-plan{border:1px solid #4d6426;background:#121a0e;border-radius:12px;padding:12px}
+.overlay-decision{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.overlay-decision button{min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;margin:0}
+.overlay-decision button span{font-size:12px;font-weight:900}
+.overlay-decision button small{font-size:9px;font-weight:700;opacity:.68}
+.overlay-decision .replace-btn{width:auto}
+@media(max-width:520px){.overlay-decision{grid-template-columns:1fr}}
+@media(max-width:950px){.racefacts{grid-template-columns:repeat(2,1fr)}.app{grid-template-columns:1fr}.rail{display:none}.main{padding:20px}.two,.strategy-grid{grid-template-columns:1fr}.weather{grid-template-columns:1fr 1fr}.weather>div:first-child{grid-column:1/-1}.model-grid,.metrics{grid-template-columns:repeat(2,1fr)}}@media(max-width:600px){.racefacts{grid-template-columns:1fr 1fr}.weather{grid-template-columns:1fr}.compact{grid-template-columns:1fr}.compact-col{padding:12px 0}.compact-col+.compact-col{border-left:0;border-top:1px solid var(--border)}.pitcost{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="rail"><div class="logo">P</div><button class="active" data-view="pre">◫</button><button data-view="overlay">◉</button><div class="spacer"></div><button id="reset">↺</button></aside>
+<main class="main">
+<div class="toolbar"><select id="scenario"><option value="gt3">Le Mans 1h45 — LMGT3 average sim racer</option><option value="lemans">Le Mans 24h — medium driver</option><option value="lemansRain">Le Mans 24h — rain arrives early</option><option value="ready">Spa — dry Medium data</option><option value="oneLap">Spa — one clean lap</option></select><select id="liveEvent"><option value="normal">Live event: normal</option><option value="gt3Consumption">GT3 sim: sustained consumption drift</option><option value="gt3SlowZone">GT3 sim: Slow Zone changes race projection</option><option value="gt3Drizzle">GT3 sim: brief drizzle — stay on slicks</option><option value="gt3Incident">GT3 sim: spin / tyre spike</option><option value="telemetryLoss">Telemetry loss</option><option value="missedPit">Missed pit entry</option><option value="rainEarly">Rain arrives early</option><option value="consumption">Consumption drift</option><option value="incident">Incident</option></select><span class="muted">Backend prototype · personal data only</span></div>
+<section id="preView">
+<div class="top"><div><div class="eyebrow">Pre-race strategy</div><h1 id="pageTitle">Spa-Francorchamps</h1><div class="sub" id="pageSub">Ferrari 499P · 45 min race</div></div><div class="pill good"><span class="dot"></span>LMU connected</div></div>
+<div id="banner"></div>
+<div class="racefacts">
+  <div class="racefact"><div class="label">Race length</div><b id="raceLength">45 min</b></div>
+  <div class="racefact"><div class="label">Estimated laps</div><b id="raceLaps">23</b></div>
+  <div class="racefact"><div class="label">Dry tyre allocation</div><b id="tyreAllocation">18 max · 14 left</b></div>
+  <div class="racefact"><div class="label">Available compounds</div><b id="raceCompounds">Soft · Medium · Hard · Wet</b></div>
+</div>
+<div class="card" style="margin-bottom:16px"><div class="weather"><div><div class="eyebrow">Forecast</div><div class="sub" style="margin-top:5px">Race forecast</div></div><div><div class="weather-time" id="wTime0">START</div><div class="weather-main" id="w0">Dry</div><div class="weather-meta" id="wMeta0">24°C track</div></div><div><div class="weather-time" id="wTime1">+6H</div><div class="weather-main" id="w1">Dry</div><div class="weather-meta" id="wMeta1">23°C track</div></div><div><div class="weather-time" id="wTime2">+12H</div><div class="weather-main" id="w2">Dry</div><div class="weather-meta" id="wMeta2">22°C track</div></div><div><div class="weather-time" id="wTime3">FINISH</div><div class="weather-main" id="w3">Dry</div><div class="weather-meta" id="wMeta3">21°C track</div></div></div></div>
+<div id="preContent">
+<div class="grid two" style="margin-bottom:16px">
+<div class="card"><div class="chart-head"><div><div class="card-title"><b>Strategy data</b></div><div class="sub">Choose the laps used for this strategy.</div></div><label><span class="label">Start compound</span><select id="compound" class="select"></select></label></div><div class="controls"><div class="seg"><button id="qualBtn" class="active">Qualifying</button><button id="histBtn">Recent clean laps</button></div><div class="stepper" id="recentStepper"><button id="histMinus">−</button><div class="value" id="histN">10</div><button id="histPlus">+</button></div></div><div class="controls"><span class="label">Buffer laps</span><div class="stepper"><button id="bufMinus">−</button><div class="value" id="bufN">1</div><button id="bufPlus">+</button></div><span class="sub">Every change reruns the solver.</span></div></div>
+<div class="card"><div><b>Driver model</b></div><div class="sub">Averages for the selected road condition and compound.</div><div class="model-grid"><div class="model"><div class="label">Fuel</div><strong id="mFuel"></strong><small id="mFuelSub"></small></div><div class="model"><div class="label">VE</div><strong id="mVE"></strong><small id="mVESub"></small></div><div class="model"><div class="label">Tyre wear</div><strong id="mWear"></strong><small id="mWearSub"></small></div></div></div>
+</div>
+<div id="empty" class="card empty hide"></div>
+<div id="strategyArea" class="grid strategy-grid">
+<div><div id="strategyChoices" class="strategy-choices">
+  <button id="flatChoice" type="button" class="strategy-choice active">
+    <span class="choice-kicker">FLAT OUT</span>
+    <strong id="flatChoiceMain">—</strong>
+    <small id="flatChoiceSub">Baseline strategy</small>
+  </button>
+  <button id="saveChoice" type="button" class="strategy-choice">
+    <span class="choice-kicker">FUEL SAVE</span>
+    <strong id="saveChoiceMain">—</strong>
+    <small id="saveChoiceSub">—</small>
+  </button>
+</div><div class="chart-head" style="margin-bottom:8px"><div class="eyebrow" id="strategySectionLabel">Recommended</div><div id="timeDelta" class="pill good">Recommended · 0.0 s</div></div><div class="card hero"><div class="strategy-name" id="strategyName">PERSONAL MODEL</div><div class="strategy-main" id="strMain"></div><div class="sub" id="compoundChosen"></div><div class="metrics"><div class="metric"><div class="label">Start fuel</div><b id="startFuel"></b></div><div class="metric"><div class="label">Start VE</div><b id="startVE"></b></div><div class="metric"><div class="label">Fuel ratio</div><b id="ratio"></b></div><div class="metric"><div class="label">Tyres</div><b id="tyres"></b></div></div></div><div class="strategy-actions"><button id="editStrategy" class="secondary">Edit strategy</button><button id="resetStrategy" class="secondary hide">Back to recommended</button></div><div id="strategyEditor" class="card strategy-editor hide"><div class="chart-head"><div><b>Custom pit plan</b><div class="sub">Move pit laps or change tyre service. Fuel and VE targets update automatically.</div></div><button id="addStop" class="secondary">+ Add stop</button></div><div id="strategyRows" class="strategy-rows"></div><div id="strategyValidation" class="sub"></div></div><button id="load" class="primary wide">Load selected strategy</button></div>
+<div class="card"><div class="chart-head"><div><b id="chartTitle">Strategy</b><div id="chartSub" class="sub">Personal wear + pace model</div></div><div class="chart-toolbar"><div class="chart-toggle"><button id="lifeBtn" class="active">Tyre life</button><button id="paceBtn">Pace loss</button></div><div class="chart-nav"><button id="panLeft" class="secondary" title="Scroll left">←</button><button id="zoomOut" class="secondary" title="Zoom out">−</button><span id="zoomLabel" class="pill">100%</span><button id="zoomIn" class="secondary" title="Zoom in">+</button><button id="panRight" class="secondary" title="Scroll right">→</button></div></div></div><div id="chartViewport" class="chart-viewport"><svg id="chart" viewBox="0 0 760 250"></svg></div><div id="stintStrip" class="stint-strip"></div><div class="legend"><span><i class="sw" style="background:var(--amber)"></i>FL</span><span><i class="sw" style="background:var(--cyan)"></i>FR</span><span><i class="sw" style="background:var(--green)"></i>RL</span><span><i class="sw" style="background:#858d99"></i>RR</span><span id="compoundGraph" class="pill"></span></div><div class="explain"><div><b id="tyreDecision">Tyre decision</b><div id="tyreWhy" class="sub" style="margin-top:4px"></div></div><div id="net" class="net"></div></div><div class="pitcost"><div class="label">Pit cost</div><div class="pititem"><span>Lane loss</span><b id="lane"></b></div><div class="pititem"><span>Fuel / VE</span><b id="service"></b></div><div class="pititem"><span>Tyres</span><b id="tyreSvc"></b></div><div class="pill">LMU/game-side data</div></div></div>
+</div>
+<details class="card backend"><summary>Backend inspector</summary><pre id="backendJson"></pre></details>
+</div></section>
+<section id="overlayView" class="hide"><div class="top"><div><div class="eyebrow">In-race overlay</div><h1>Overlay test</h1><div class="sub">One action input: tap to expand. If an updated strategy is shown, tap keeps the current plan; hold replaces it with the update.</div></div><button id="back" class="secondary">Back</button></div><div class="overlay-page"><div class="card" style="width:min(820px,100%)"><div class="chart-head"><div><div class="label">Action input test</div><div id="actionHint" class="sub" style="margin-top:5px">Tap: expand overlay</div></div><button id="actionBtn" class="secondary">Tap / hold</button></div><div class="press-track"><div id="pressFill" class="press-fill"></div></div></div><div class="overlay-shell"><div id="compact" class="compact" tabindex="0"><div class="compact-col"><div class="label">Fuel target</div><div id="ft" class="target"></div><div id="fa" class="actual"></div><div id="fd" class="diff"></div></div><div class="compact-col"><div class="label">VE target</div><div id="vt" class="target"></div><div id="va" class="actual"></div><div id="vd" class="diff"></div></div><div class="compact-col"><div class="label">Tyre target · Avg</div><div id="tt" class="target"></div><div id="ta" class="actual"></div><div id="td" class="diff"></div></div></div></div><div id="expanded" class="expanded hide">
+  <div class="overlay-plan current-plan">
+    <div class="overlay-plan-head">
+      <div class="label">Next pit stop</div>
+      <span class="overlay-status">CURRENT</span>
+    </div>
+    <div id="pit" class="pitbig"></div>
+    <div id="pitDetails" class="sub"></div>
+  </div>
+  <div id="newPlan" class="hide">
+    <div class="divider"></div>
+    <div class="overlay-plan updated-plan">
+      <div class="overlay-plan-head">
+        <div class="label">Updated strategy</div>
+        <span class="overlay-status updated">FASTER PLAN</span>
+      </div>
+      <div id="newReason" class="reason" style="display:block"></div>
+      <div id="newPit" class="pitbig"></div>
+      <div id="newDetails" class="sub"></div>
+      <div class="overlay-decision">
+        <button id="keepCurrentBtn" class="secondary" type="button">
+          <span>Keep Current</span>
+          <small>Tap input</small>
+        </button>
+        <button id="replaceStrategyBtn" class="primary replace-btn" type="button">
+          <span>Replace</span>
+          <small>Hold input</small>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div id="overlayMsg" class="sub" style="margin-top:12px"></div>
+</div></div></section>
+</main></div>
+<script>(function(global){
+'use strict';
+const avg=(arr,fn)=>arr.length?arr.reduce((s,x)=>s+fn(x),0)/arr.length:0;
+const median=v=>{const a=[...v].sort((x,y)=>x-y);if(!a.length)return 0;const m=Math.floor(a.length/2);return a.length%2?a[m]:(a[m-1]+a[m])/2};
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+const SESSIONS={
+  spa:{id:'spa',track:'Spa-Francorchamps',car:'Ferrari 499P',durationMin:45,isTimed:true,estimatedRaceLaps:23,maxFuelTankL:100,maxVEPercent:100,tyreAllocationMax:18,tyreRemaining:14,availableCompounds:['Soft','Medium','Hard','Wet'],optimalCompound:'Medium',pit:{laneLossSec:22.1,fuelVEBaseSec:7,fuelVESecPerPercent:.16,oneOrTwoTyresSec:5.2,threeOrFourTyresSec:12,fourWetTyresSec:12}},
+  lemans:{id:'lemans',track:'Circuit de la Sarthe',car:'Ferrari 499P',durationMin:1440,isTimed:true,estimatedRaceLaps:373,maxFuelTankL:90,maxVEPercent:100,tyreAllocationMax:56,tyreRemaining:56,availableCompounds:['Soft','Medium','Hard','Wet'],optimalCompound:'Medium',pit:{laneLossSec:28.5,fuelVEBaseSec:7.5,fuelVESecPerPercent:.15,oneOrTwoTyresSec:5.5,threeOrFourTyresSec:12,fourWetTyresSec:12}},
+  lemansGT3:{id:'lemansGT3',track:'Circuit de la Sarthe',car:'Ferrari 296 LMGT3 Evo',durationMin:105,isTimed:true,estimatedRaceLaps:25,maxFuelTankL:120,maxVEPercent:100,tyreAllocationMax:12,tyreRemaining:12,availableCompounds:['Medium','Wet'],optimalCompound:'Medium',pit:{laneLossSec:31.5,fuelVEBaseSec:7.8,fuelVESecPerPercent:.145,oneOrTwoTyresSec:5.5,threeOrFourTyresSec:12,fourWetTyresSec:12}}
+};
+
+const laps=[];let id=1;
+function noise(i,s){return ((((i*43+11)%23)-11)/11)*s}
+function addSeries({sessionId,sessionType='Race',count,condition='Dry',compound='Medium',baseLap,fuel,ve,wear,temp,wetness=0,startRemaining=100,dropPerLap=3.5,paceCurve=.00022}){
+  const sess=SESSIONS[sessionId];
+  for(let i=0;i<count;i++){
+    const remaining=Math.max(12,startRemaining-i*dropPerLap),paceLoss=paceCurve*Math.pow(100-remaining,2);
+    laps.push({id:id++,sessionId,car:sess.car,track:sess.track,session:sessionType,clean:true,condition,compound,
+      lapTimeSec:baseLap+paceLoss+noise(i,.28),fuelPerLap:fuel+noise(i,.05),vePerLap:ve+noise(i,.06),trackTempC:temp+noise(i,1.2),roadWetnessPct:Math.max(0,wetness+noise(i,1.4)),
+      wear:{fl:wear.fl+noise(i,.02),fr:wear.fr+noise(i,.018),rl:wear.rl+noise(i,.015),rr:wear.rr+noise(i,.015)},minTyreRemaining:remaining,correctedTyrePaceLossSec:paceLoss,ts:Date.now()/1000-id*17});
+  }
+}
+addSeries({sessionId:'spa',sessionType:'Qualifying',count:6,baseLap:122.02,fuel:3.58,ve:4.70,wear:{fl:1.50,fr:1.35,rl:1.00,rr:.97},temp:24,dropPerLap:4.0});
+addSeries({sessionId:'spa',count:18,baseLap:122.16,fuel:3.57,ve:4.68,wear:{fl:1.49,fr:1.34,rl:1.00,rr:.97},temp:27,dropPerLap:3.7});
+addSeries({sessionId:'lemans',sessionType:'Qualifying',count:5,baseLap:215.6,fuel:7.34,ve:8.28,wear:{fl:1.19,fr:1.14,rl:.98,rr:.96},temp:31,dropPerLap:4.1,paceCurve:.00023});
+addSeries({sessionId:'lemans',count:28,baseLap:216.5,fuel:7.31,ve:8.24,wear:{fl:1.17,fr:1.12,rl:.97,rr:.95},temp:29,dropPerLap:3.55,paceCurve:.00023});
+addSeries({sessionId:'lemans',count:12,compound:'Soft',baseLap:216.0,fuel:7.34,ve:8.29,wear:{fl:1.34,fr:1.29,rl:1.10,rr:1.08},temp:19,dropPerLap:4.1,paceCurve:.00027});
+addSeries({sessionId:'lemans',count:11,compound:'Hard',baseLap:216.8,fuel:7.29,ve:8.20,wear:{fl:1.02,fr:.98,rl:.86,rr:.84},temp:43,dropPerLap:3.05,paceCurve:.00019});
+addSeries({sessionId:'lemans',count:3,condition:'Wet',compound:'Wet',baseLap:247.5,fuel:6.75,ve:7.46,wear:{fl:1.04,fr:1.01,rl:.92,rr:.90},temp:18,wetness:40,dropPerLap:4.0,paceCurve:.00020});
+// Average sim-racer LMGT3 history at Le Mans: deliberately much slower and less consistent than real pro best laps.
+addSeries({sessionId:'lemansGT3',sessionType:'Qualifying',count:4,baseLap:249.6,fuel:8.17,ve:9.04,wear:{fl:.61,fr:.58,rl:.49,rr:.48},temp:31,dropPerLap:3.0,paceCurve:.00017});
+addSeries({sessionId:'lemansGT3',count:24,baseLap:250.7,fuel:8.18,ve:9.05,wear:{fl:.60,fr:.57,rl:.49,rr:.48},temp:29,dropPerLap:2.0,paceCurve:.00017});
+// Sparse wet personal data on purpose: the fallback should use normalized field pace when needed.
+addSeries({sessionId:'lemansGT3',count:2,condition:'Wet',compound:'Wet',baseLap:283.0,fuel:7.55,ve:8.25,wear:{fl:.65,fr:.63,rl:.56,rr:.55},temp:22,wetness:36,dropPerLap:3.0,paceCurve:.00018});
+
+const fieldLaps=[];
+function addField(driver,sessionId,className,dry,wet,wetSlick,dryCompound='Medium'){
+  fieldLaps.push({driver,sessionId,className,condition:'Dry',compound:dryCompound,lapTimeSec:dry,dryReferenceSec:dry,wetnessPct:0});
+  fieldLaps.push({driver,sessionId,className,condition:'Wet',compound:'Wet',lapTimeSec:wet,dryReferenceSec:dry,wetnessPct:40});
+  fieldLaps.push({driver,sessionId,className,condition:'Wet',compound:dryCompound,lapTimeSec:wetSlick,dryReferenceSec:dry,wetnessPct:40});
+}
+addField('A','lemans','Hypercar',207.0,243.0,258.0);addField('B','lemans','Hypercar',208.0,244.5,259.5);addField('C','lemans','Hypercar',209.3,246.0,262.0);addField('D','lemans','Hypercar',210.0,247.0,263.5);addField('E','lemans','Hypercar',208.6,245.2,260.4);
+addField('G1','lemansGT3','LMGT3',236.2,273.8,286.5);addField('G2','lemansGT3','LMGT3',237.1,275.0,288.0);addField('G3','lemansGT3','LMGT3',238.4,276.8,290.1);addField('G4','lemansGT3','LMGT3',239.0,277.4,291.0);addField('G5','lemansGT3','LMGT3',237.7,275.9,288.8);
+
+function matching({sessionId='spa',condition='Dry',compound='Medium',session=null}){return laps.filter(l=>l.clean&&l.sessionId===sessionId&&l.condition===condition&&(compound==null||l.compound===compound)&&(!session||l.session===session)).sort((a,b)=>b.ts-a.ts)}
+function aggregate(ls){if(!ls.length)return null;const wear={fl:avg(ls,l=>l.wear.fl),fr:avg(ls,l=>l.wear.fr),rl:avg(ls,l=>l.wear.rl),rr:avg(ls,l=>l.wear.rr)};return {count:ls.length,lapTimeSec:avg(ls,l=>l.lapTimeSec),fuelPerLap:avg(ls,l=>l.fuelPerLap),vePerLap:avg(ls,l=>l.vePerLap),trackTempC:avg(ls,l=>l.trackTempC),roadWetnessPct:avg(ls,l=>l.roadWetnessPct),wear,wearAvg:(wear.fl+wear.fr+wear.rl+wear.rr)/4,correctedTyrePaceLossSec:avg(ls,l=>l.correctedTyrePaceLossSec),observedMinTyreRemaining:Math.min(...ls.map(l=>l.minTyreRemaining)),observedMaxTyreRemaining:Math.max(...ls.map(l=>l.minTyreRemaining))}}
+function fitPaceCurve(ls){const pts=ls.filter(l=>Number.isFinite(l.correctedTyrePaceLossSec));if(pts.length<3)return {available:false,samples:pts.length};let s2=0,s3=0,s4=0,r1=0,r2=0;for(const p of pts){const x=(100-p.minTyreRemaining)/100,y=Math.max(0,p.correctedTyrePaceLossSec);s2+=x*x;s3+=x*x*x;s4+=x*x*x*x;r1+=x*y;r2+=x*x*y}const A=s2+1e-6,B=s3,D=s4+1e-6,det=A*D-B*B;let a=0,b=0;if(Math.abs(det)>1e-12){a=(r1*D-B*r2)/det;b=(A*r2-B*r1)/det}a=Math.max(0,a);b=Math.max(0,b);const rmse=Math.sqrt(avg(pts,p=>{const x=(100-p.minTyreRemaining)/100,e=(a*x+b*x*x)-p.correctedTyrePaceLossSec;return e*e}));return {available:true,a,b,rmse,samples:pts.length,minObserved:Math.min(...pts.map(p=>p.minTyreRemaining)),maxObserved:Math.max(...pts.map(p=>p.minTyreRemaining))}}
+function pacePrediction(curve,remaining){if(!curve?.available)return null;const x=clamp((100-remaining)/100,0,1),sec=curve.a*x+curve.b*x*x,extrapolationPP=Math.max(0,curve.minObserved-remaining);return {sec,extrapolationPP,uncertaintySec:curve.rmse+.015*extrapolationPP+.0015*extrapolationPP*extrapolationPP}}
+function selectLaps({sessionId,source='qual',recentN=10,condition='Dry',compound='Medium'}){const all=matching({sessionId,condition,compound}),qual=matching({sessionId,condition,compound,session:'Qualifying'});if(source==='qual')return {laps:qual,available:qual.length,requested:qual.length,source};const n=all.length?clamp(recentN,1,all.length):0;return {laps:all.slice(0,n),available:all.length,requested:n,source}}
+function optimalCompound({session,condition='Dry'}){if(condition==='Wet')return session.availableCompounds.includes('Wet')?'Wet':null;return session.optimalCompound||session.availableCompounds.find(c=>c!=='Wet')||null}
+function fuelVEServiceSec(session,veAddedPct){return session.pit.fuelVEBaseSec+session.pit.fuelVESecPerPercent*Math.max(0,veAddedPct)}
+function fieldWeatherFactors(sessionId){const f=fieldLaps.filter(x=>x.sessionId===sessionId);const wet=f.filter(x=>x.condition==='Wet'&&x.compound==='Wet').map(x=>x.lapTimeSec/x.dryReferenceSec);const slick=f.filter(x=>x.condition==='Wet'&&x.compound!=='Wet').map(x=>x.lapTimeSec/x.dryReferenceSec);if(wet.length<3||slick.length<3)return null;return {wetRatio:median(wet),slickWetRatio:median(slick),samples:Math.min(wet.length,slick.length)}}
+function wetDecision({session,forecast=[],plannedPitLap,dryBaseLapSec,raceLaps,personalWetAllowed=true}){if(!forecast.some(f=>f.condition==='Wet'||f.condition==='Damp'))return {state:'Not needed'};const trans=forecast.find(f=>f.condition==='Wet'||f.condition==='Damp'),candidateLap=trans?.lap||plannedPitLap,extraStop=Math.abs(candidateLap-plannedPitLap)>1,switchCost=session.pit.fourWetTyresSec+(extraStop?session.pit.laneLossSec:0),lapsAfter=Math.max(1,raceLaps-candidateLap);let wetLap,slickLap,source;const wet=personalWetAllowed?matching({sessionId:session.id,condition:'Wet',compound:'Wet'}):[];if(wet.length>=5){wetLap=aggregate(wet).lapTimeSec;const f=fieldWeatherFactors(session.id);slickLap=f?dryBaseLapSec*f.slickWetRatio:wetLap+10;source='personal'}else{const f=fieldWeatherFactors(session.id);if(!f)return {state:'Learning'};wetLap=dryBaseLapSec*f.wetRatio;slickLap=dryBaseLapSec*f.slickWetRatio;source='field-normalized'}const paceGainPerLap=Math.max(0,slickLap-wetLap),projectedGainSec=paceGainPerLap*lapsAfter-switchCost;return {state:'Ready',source,candidateLap,extraStop,switchCostSec:switchCost,paceGainPerLap,projectedGainSec,recommendation:projectedGainSec>0?'Switch to Wet':'Stay on slicks',predictedWetLapSec:wetLap,predictedSlickWetLapSec:slickLap}}
+
+function buildStintLengths(totalLaps,maxStint){
+  const out=[];let left=Math.max(1,totalLaps);
+  while(left>maxStint){out.push(maxStint);left-=maxStint}
+  out.push(left);
+  return out;
+}
+function tyreCostOverStint(curve,remaining,wear,stintLaps){let loss=0,unc=0,min=100;for(let l=1;l<=stintLaps;l++){const eff=Math.min(...['fl','fr','rl','rr'].map(k=>Math.max(0,remaining[k]-wear[k]*l)));min=Math.min(min,eff);const p=pacePrediction(curve,eff);if(p){loss+=p.sec;unc+=p.uncertaintySec}}return {loss,unc,min}}
+function tyreActionDef(label,session){if(label==='All 4')return {label,count:4,reset:['fl','fr','rl','rr'],service:session.pit.threeOrFourTyresSec};if(label==='FL + FR')return {label,count:2,reset:['fl','fr'],service:session.pit.oneOrTwoTyresSec};return {label:'No tyres',count:0,reset:[],service:0}}
+function chooseTyreAction({curve,remaining,wear,nextStintLaps,session,dryTyresRemaining}){const defs=['No tyres','FL + FR','All 4'].map(x=>tyreActionDef(x,session)),cands=[];for(const d of defs){if(d.count>dryTyresRemaining)continue;const rem={...remaining};d.reset.forEach(k=>rem[k]=100);const tc=tyreCostOverStint(curve,rem,wear,nextStintLaps);cands.push({...d,paceLossSec:tc.loss,uncertaintySec:tc.unc,minRemaining:tc.min,totalCostSec:d.service+tc.loss,riskAdjustedCostSec:d.service+tc.loss+tc.unc*.25})}return cands.sort((a,b)=>a.riskAdjustedCostSec-b.riskAdjustedCostSec)[0]||defs[0]}
+function maxStintFor(session,avgModel){const fuel=Math.max(1,Math.floor(session.maxFuelTankL/avgModel.fuelPerLap)),ve=Math.max(1,Math.floor(session.maxVEPercent/avgModel.vePerLap));return Math.max(1,Math.min(fuel,ve))}
+function buildRacePlan({session,avgModel,modelLaps,totalLaps,compound}){
+  const maxStint=maxStintFor(session,avgModel),lengths=buildStintLengths(totalLaps,maxStint),curve=fitPaceCurve(modelLaps),wear=avgModel.wear,stints=[],pits=[];
+  let lap=1,dryTyresRemaining=Math.max(0,session.tyreRemaining-(compound==='Wet'?0:4)),tyreRemaining={fl:100,fr:100,rl:100,rr:100};
+  for(let i=0;i<lengths.length;i++){
+    const len=lengths[i],startLap=lap,endLap=lap+len-1,tyreStart={...tyreRemaining};
+    for(const k of Object.keys(tyreRemaining))tyreRemaining[k]=Math.max(0,tyreRemaining[k]-wear[k]*len);
+    const fuelRatio=1.00;
+    const fuelStartL=Math.min(session.maxFuelTankL,avgModel.fuelPerLap*len*1.012);
+    const veStartPercent=i===0?100:Math.min(100,avgModel.vePerLap*len*1.012);
+    stints.push({index:i+1,startLap,endLap,laps:len,compound,fuelRatio,fuelStartL,veStartPercent,tyreStart,tyreEnd:{...tyreRemaining}});
+    lap=endLap+1;if(i===lengths.length-1)break;
+    const nextLen=lengths[i+1],action=chooseTyreAction({curve,remaining:tyreRemaining,wear,nextStintLaps:nextLen,session,dryTyresRemaining});
+    action.reset.forEach(k=>tyreRemaining[k]=100);
+    const dryCount=compound==='Wet'?0:action.count;
+    dryTyresRemaining-=dryCount;
+    const fuelTarget=Math.min(session.maxFuelTankL,avgModel.fuelPerLap*nextLen*1.012),veTarget=Math.min(100,avgModel.vePerLap*nextLen*1.012),service=fuelVEServiceSec(session,veTarget)+action.service;
+    pits.push({afterStint:i+1,lap:endLap+1,fuelTargetL:fuelTarget,veTargetPercent:veTarget,fuelRatio,tyres:action.label,tyresChanged:action.count,dryTyresUsed:dryCount,compound,serviceSec:service,tyreAction:action});
+  }
+  return {maxStintLaps:maxStint,stints,pits,stops:pits.length,dryTyresRemaining};
+}
+
+function fuelSavePenaltyPerLap({avgLapSec,saveFrac}){
+  // Generic empirical PRIOR only. It is intentionally replaceable by a personal fit.
+  // saveFrac is 0..1; convert to percentage points for a smooth convex penalty.
+  const p=Math.max(0,saveFrac*100);
+  return avgLapSec*(0.00018*p+0.000012*p*p);
+}
+function buildFuelSavePlan({session,avgModel,modelLaps,totalLaps,compound,flatPlan}){
+  if(!flatPlan || flatPlan.stops<1)return null;
+  const desiredStints=Math.max(1,flatPlan.stints.length-1); // try to remove one stop
+  if(desiredStints>=flatPlan.stints.length)return null;
+  const base=Math.floor(totalLaps/desiredStints),extra=totalLaps%desiredStints;
+  const lengths=Array.from({length:desiredStints},(_,i)=>base+(i<extra?1:0));
+  const req=lengths.map(len=>{
+    const fuelTarget=Math.min(avgModel.fuelPerLap,session.maxFuelTankL/Math.max(1,len));
+    const veTarget=Math.min(avgModel.vePerLap,session.maxVEPercent/Math.max(1,len));
+    const fuelSave=Math.max(0,1-fuelTarget/avgModel.fuelPerLap);
+    const veSave=Math.max(0,1-veTarget/avgModel.vePerLap);
+    return {len,fuelTarget,veTarget,saveFrac:Math.max(fuelSave,veSave)};
+  });
+  const maxSave=Math.max(...req.map(x=>x.saveFrac));
+  // Beyond 15% we treat the strategy as not realistically available without a calibrated model.
+  if(maxSave>0.15)return null;
+  // If no real saving is needed, this is not a distinct strategy.
+  if(maxSave<0.004)return null;
+
+  const curve=fitPaceCurve(modelLaps),wear=avgModel.wear,stints=[],pits=[];
+  let lap=1,dryTyresRemaining=Math.max(0,session.tyreRemaining-(compound==='Wet'?0:4));
+  let tyreRemaining={fl:100,fr:100,rl:100,rr:100};
+  let savePenalty=0;
+  for(let i=0;i<lengths.length;i++){
+    const q=req[i],len=q.len,startLap=lap,endLap=lap+len-1,tyreStart={...tyreRemaining};
+    for(const k of Object.keys(tyreRemaining))tyreRemaining[k]=Math.max(0,tyreRemaining[k]-wear[k]*len);
+    const penaltyPerLap=fuelSavePenaltyPerLap({avgLapSec:avgModel.lapTimeSec,saveFrac:q.saveFrac});
+    savePenalty+=penaltyPerLap*len;
+    const fuelStartL=Math.min(session.maxFuelTankL,q.fuelTarget*len*1.006);
+    const veStartPercent=Math.min(100,q.veTarget*len*1.006);
+    stints.push({
+      index:i+1,startLap,endLap,laps:len,compound,
+      fuelRatio:q.fuelTarget/Math.max(.001,q.veTarget),
+      fuelStartL,veStartPercent,
+      targetFuelPerLap:q.fuelTarget,targetVEPerLap:q.veTarget,
+      saveFrac:q.saveFrac,savePenaltyPerLap:penaltyPerLap,
+      tyreStart,tyreEnd:{...tyreRemaining}
+    });
+    lap=endLap+1;
+    if(i===lengths.length-1)break;
+    const next=req[i+1],action=chooseTyreAction({curve,remaining:tyreRemaining,wear,nextStintLaps:next.len,session,dryTyresRemaining});
+    action.reset.forEach(k=>tyreRemaining[k]=100);
+    const dryCount=compound==='Wet'?0:action.count;
+    dryTyresRemaining-=dryCount;
+    const fuelTargetL=Math.min(session.maxFuelTankL,next.fuelTarget*next.len*1.006);
+    const veTargetPercent=Math.min(100,next.veTarget*next.len*1.006);
+    const service=fuelVEServiceSec(session,veTargetPercent)+action.service;
+    pits.push({
+      afterStint:i+1,lap:endLap+1,fuelTargetL,veTargetPercent,
+      fuelRatio:next.fuelTarget/Math.max(.001,next.veTarget),
+      tyres:action.label,tyresChanged:action.count,dryTyresUsed:dryCount,
+      compound,serviceSec:service,tyreAction:action
+    });
+  }
+  const plan={maxStintLaps:Math.max(...lengths),stints,pits,stops:pits.length,dryTyresRemaining,savePenaltySec:savePenalty};
+  const evaluation=evaluatePlan({session,avgModel,modelLaps,totalLaps,plan});
+  evaluation.savePenaltySec=savePenalty;
+  evaluation.totalTimeSec+=savePenalty;
+  return {plan,evaluation,maxSaveFrac:maxSave,modelSource:'empirical-prior'};
+}
+
+function evaluatePlan({session,avgModel,modelLaps,totalLaps,plan}){
+  const curve=fitPaceCurve(modelLaps),wear=avgModel.wear;let drive=avgModel.lapTimeSec*totalLaps,deg=0,unc=0,pitLoss=0;
+  for(const stint of plan.stints){let rem={...stint.tyreStart};for(let l=1;l<=stint.laps;l++){for(const k of Object.keys(rem))rem[k]=Math.max(0,rem[k]-wear[k]);const eff=Math.min(...Object.values(rem));const p=pacePrediction(curve,eff);if(p){deg+=p.sec;unc+=p.uncertaintySec}}}
+  for(const p of plan.pits)pitLoss+=session.pit.laneLossSec+p.serviceSec;
+  return {valid:true,totalTimeSec:drive+deg+pitLoss,driveBaseSec:drive,tyreDegSec:deg,pitLossSec:pitLoss,uncertaintySec:unc};
+}
+function buildCustomPlan({session,avgModel,modelLaps,totalLaps,compound,pitEdits}){
+  const maxStint=maxStintFor(session,avgModel),pitsInput=[...pitEdits].map((p,i)=>({lap:Math.round(Number(p.lap)),tyres:p.tyres||'No tyres',compound:p.compound||compound,fuelRatio:clamp(Number(p.fuelRatio||1),.70,1.10),index:i})).filter(p=>Number.isFinite(p.lap)).sort((a,b)=>a.lap-b.lap);
+  const unique=[];for(const p of pitsInput){if(p.lap>=2&&p.lap<=totalLaps&&!unique.some(x=>x.lap===p.lap))unique.push(p)}
+  const starts=[1,...unique.map(p=>p.lap)],ends=[...unique.map(p=>p.lap-1),totalLaps],lengths=starts.map((st,i)=>ends[i]-st+1),violations=[];
+  lengths.forEach((len,i)=>{if(len>maxStint)violations.push(`Stint ${i+1} is ${len} laps; maximum is ${maxStint}`);if(len<1)violations.push(`Stint ${i+1} is invalid`)});
+  let tyreRemaining={fl:100,fr:100,rl:100,rr:100},dryTyresRemaining=Math.max(0,session.tyreRemaining-(compound==='Wet'?0:4)),stints=[],pits=[],currentCompound=compound,currentRatio=1.00;
+  for(let i=0;i<lengths.length;i++){
+    const len=lengths[i],tyreStart={...tyreRemaining};
+    for(const k of Object.keys(tyreRemaining))tyreRemaining[k]=Math.max(0,tyreRemaining[k]-avgModel.wear[k]*len);
+    stints.push({index:i+1,startLap:starts[i],endLap:ends[i],laps:len,compound:currentCompound,fuelRatio:currentRatio,fuelStartL:Math.min(session.maxFuelTankL,avgModel.fuelPerLap*len*1.012),veStartPercent:i===0?100:Math.min(100,avgModel.vePerLap*len*1.012),tyreStart,tyreEnd:{...tyreRemaining}});
+    if(i>=unique.length)break;
+    const e=unique[i],nextCompound=e.compound||currentCompound,a=tyreActionDef(e.tyres,session),dryCount=nextCompound==='Wet'?0:a.count;
+    if(dryCount>dryTyresRemaining)violations.push(`Pit ${i+1} uses more dry tyres than remain`);
+    a.reset.forEach(k=>tyreRemaining[k]=100);dryTyresRemaining-=dryCount;
+    currentCompound=nextCompound;currentRatio=e.fuelRatio;
+    const nextLen=lengths[i+1],fuelTarget=Math.min(session.maxFuelTankL,avgModel.fuelPerLap*nextLen*1.012),veTarget=Math.min(100,avgModel.vePerLap*nextLen*1.012),service=fuelVEServiceSec(session,veTarget)+a.service;
+    pits.push({afterStint:i+1,lap:e.lap,fuelTargetL:fuelTarget,veTargetPercent:veTarget,fuelRatio:currentRatio,tyres:a.label,tyresChanged:a.count,dryTyresUsed:dryCount,compound:nextCompound,serviceSec:service,tyreAction:a});
+  }
+  const plan={maxStintLaps:maxStint,stints,pits,stops:pits.length,dryTyresRemaining};
+  const evalResult=violations.length?{valid:false,totalTimeSec:null,violations}:{...evaluatePlan({session,avgModel,modelLaps,totalLaps,plan}),violations:[]};
+  return {plan,evaluation:evalResult};
+}
+function timedRacePlan({session,avgModel,modelLaps,compound,bufferLaps=0}){
+  let target=Math.max(1,Math.ceil(session.durationMin*60/avgModel.lapTimeSec)+bufferLaps),plan=null;
+  for(let i=0;i<5;i++){
+    plan=buildRacePlan({session,avgModel,modelLaps,totalLaps:target,compound});const evalResult=evaluatePlan({session,avgModel,modelLaps,totalLaps:target,plan});
+    const pitLoss=evalResult.pitLossSec,actual=Math.max(1,Math.floor(Math.max(0,session.durationMin*60-pitLoss)/avgModel.lapTimeSec)+1),next=actual+bufferLaps;
+    if(next===target)break;target=next;
+  }
+  plan=buildRacePlan({session,avgModel,modelLaps,totalLaps:target,compound});return {raceLaps:target,plan,evaluation:evaluatePlan({session,avgModel,modelLaps,totalLaps:target,plan})};
+}
+function predictedRaceLaps({session,avgLapSec,bufferLaps=0,timeRemainingSec=null,rollingRaceLapSec=null,estimatedPitLossSec=0}){if(!session.isTimed)return session.estimatedRaceLaps+bufferLaps;const sec=timeRemainingSec??session.durationMin*60,projection=Math.max(avgLapSec,rollingRaceLapSec||avgLapSec);return Math.max(1,Math.floor(Math.max(0,sec-estimatedPitLossSec)/projection)+1+bufferLaps)}
+function solve(input){
+  const session=SESSIONS[input.sessionId||'spa'],condition=input.condition||'Dry',compound=input.compound==='Auto'?optimalCompound({session,condition}):input.compound;if(!compound)return {status:'no-data',message:'No available compound'};
+  const selection=selectLaps({sessionId:session.id,source:input.source,recentN:input.recentN,condition,compound}),energySelection=selectLaps({sessionId:session.id,source:input.source,recentN:input.recentN,condition,compound:null});if(!energySelection.laps.length)return {status:'no-data',message:`No clean ${condition.toLowerCase()} laps`,selectedCompound:compound,selection,energySelection,session};
+  const energyAg=aggregate(energySelection.laps),tyreAg=selection.laps.length?aggregate(selection.laps):energyAg,ag={...energyAg,wear:tyreAg.wear,wearAvg:tyreAg.wearAvg,correctedTyrePaceLossSec:tyreAg.correctedTyrePaceLossSec,observedMinTyreRemaining:tyreAg.observedMinTyreRemaining,observedMaxTyreRemaining:tyreAg.observedMaxTyreRemaining};
+  let raceLaps,plan,planEvaluation;if(input.raceLaps){raceLaps=input.raceLaps;plan=buildRacePlan({session,avgModel:ag,modelLaps:selection.laps,totalLaps:raceLaps,compound});planEvaluation=evaluatePlan({session,avgModel:ag,modelLaps:selection.laps,totalLaps:raceLaps,plan})}else{const timed=timedRacePlan({session,avgModel:ag,modelLaps:selection.laps,compound,bufferLaps:input.bufferLaps||0});raceLaps=timed.raceLaps;plan=timed.plan;planEvaluation=timed.evaluation}
+  const first=plan.stints[0],nextPit=plan.pits[0]||null,firstPitTyre=nextPit?.tyreAction||null,predictedMin=Math.min(...first.tyreEnd?Object.values(first.tyreEnd):[100]),weather=wetDecision({session,forecast:input.forecast||[],plannedPitLap:nextPit?.lap||raceLaps,dryBaseLapSec:ag.lapTimeSec,raceLaps,personalWetAllowed:input.personalWetAllowed!==false});
+  const fuelSave=buildFuelSavePlan({session,avgModel:ag,modelLaps:selection.laps,totalLaps:raceLaps,compound,flatPlan:plan});
+  const flatRace={raceLaps,bufferLaps:input.bufferLaps||0,maxStintLaps:plan.maxStintLaps,stops:plan.stops,stints:plan.stints,pits:plan.pits,estimatedTotalTimeSec:planEvaluation.totalTimeSec,dryTyresRemaining:plan.dryTyresRemaining};
+  let fuelSaveResult=null;
+  if(fuelSave){
+    fuelSaveResult={
+      available:true,
+      race:{raceLaps,bufferLaps:input.bufferLaps||0,maxStintLaps:fuelSave.plan.maxStintLaps,stops:fuelSave.plan.stops,stints:fuelSave.plan.stints,pits:fuelSave.plan.pits,estimatedTotalTimeSec:fuelSave.evaluation.totalTimeSec,dryTyresRemaining:fuelSave.plan.dryTyresRemaining},
+      planEvaluation:fuelSave.evaluation,
+      deltaSec:fuelSave.evaluation.totalTimeSec-planEvaluation.totalTimeSec,
+      maxSaveFrac:fuelSave.maxSaveFrac,
+      modelSource:fuelSave.modelSource
+    };
+  }
+  const recommendedMode=fuelSaveResult&&fuelSaveResult.deltaSec<0?'save':'flat';
+  return {status:'ok',session,selectedCompound:compound,selection,energySelection,average:ag,carLimits:{maxFuelTankL:session.maxFuelTankL,maxVEPercent:100},race:flatRace,fuelSave:fuelSaveResult,recommendedMode,strategy:{startFuelL:first.fuelStartL,startVEPercent:first.veStartPercent,pitLap:nextPit?.lap||null,addFuelL:nextPit?.fuelTargetL||0,pitVEPercent:nextPit?.veTargetPercent||0,fuelRatio:1,tyres:nextPit?.tyres||'No stop',pitServiceSec:nextPit?.serviceSec||0},tyre:{curve:fitPaceCurve(selection.laps),predictedMin,recommendation:firstPitTyre,candidates:firstPitTyre?[firstPitTyre]:[]},weather,pit:session.pit,planEvaluation};
+}
+function evaluateCustomStrategy({baseResult,pitEdits}){if(!baseResult||baseResult.status!=='ok')return {status:'invalid'};const built=buildCustomPlan({session:baseResult.session,avgModel:baseResult.average,modelLaps:baseResult.selection.laps,totalLaps:baseResult.race.raceLaps,compound:baseResult.selectedCompound,pitEdits});const baseline=baseResult.planEvaluation?.totalTimeSec??baseResult.race.estimatedTotalTimeSec,delta=built.evaluation.valid?built.evaluation.totalTimeSec-baseline:null;return {status:built.evaluation.valid?'ok':'invalid',plan:built.plan,evaluation:built.evaluation,deltaSec:delta}}
+function replanRemaining({currentLap,timeRemainingSec,condition,compound='Auto',source='recent',recentN=20,bufferLaps=1,sessionId='lemans',forecast=[],personalWetAllowed=true}){const session=SESSIONS[sessionId],chosen=compound==='Auto'?optimalCompound({session,condition}):compound,selection=selectLaps({sessionId,source,recentN,condition,compound:chosen});if(!selection.laps.length)return {status:'no-data'};const ag=aggregate(selection.laps),guess=predictedRaceLaps({session,avgLapSec:ag.lapTimeSec,bufferLaps,timeRemainingSec}),plan=buildRacePlan({session,avgModel:ag,modelLaps:selection.laps,totalLaps:guess,compound:chosen});return {status:'ok',fromLap:currentLap,remainingLaps:guess,selectedCompound:chosen,plan,average:ag,weather:wetDecision({session,forecast,plannedPitLap:currentLap+(plan.pits[0]?.lap||guess),dryBaseLapSec:ag.lapTimeSec,raceLaps:guess,personalWetAllowed})}}
+
+global.LMUStrategyBackend={SESSIONS,laps,fieldLaps,matching,aggregate,fitPaceCurve,pacePrediction,selectLaps,solve,replanRemaining,buildRacePlan,buildStintLengths,fieldWeatherFactors,optimalCompound,predictedRaceLaps,evaluatePlan,evaluateCustomStrategy,buildCustomPlan,timedRacePlan,buildFuelSavePlan,fuelSavePenaltyPerLap};
+})(window);
+</script><script>(function(){
+'use strict';
+const B=window.LMUStrategyBackend,$=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const S={view:'pre',scenario:'gt3',strategyMode:'flat',source:'qual',recentN:10,buffer:1,compound:'Auto',chart:'life',expanded:false,last:null,event:'normal',editing:false,customPits:[],customResult:null,chartZoom:1,acceptedUpdate:null,dismissedUpdate:null,pressDown:false,longTriggered:false,pressStart:0,pressTimer:null};
+const scenarios={
+ gt3:{sessionId:'lemansGT3',condition:'Dry',trackTempC:31,personalWetAllowed:false,forecast:[{lap:0,hour:0,condition:'Dry',trackTempC:34,airTempC:24},{lap:9,hour:.58,condition:'Dry',trackTempC:31,airTempC:23},{lap:18,hour:1.17,condition:'Dry',trackTempC:28,airTempC:22},{lap:25,hour:1.75,condition:'Dry',trackTempC:26,airTempC:21}]},
+ lemans:{sessionId:'lemans',condition:'Dry',trackTempC:31,personalWetAllowed:false,forecast:[{lap:0,hour:0,condition:'Dry',trackTempC:36,airTempC:24},{lap:92,hour:6,condition:'Damp',trackTempC:24,airTempC:18},{lap:186,hour:12,condition:'Dry',trackTempC:17,airTempC:15},{lap:373,hour:24,condition:'Dry',trackTempC:43,airTempC:28}]},
+ lemansRain:{sessionId:'lemans',condition:'Dry',trackTempC:31,personalWetAllowed:false,forecast:[{lap:0,hour:0,condition:'Dry',trackTempC:36,airTempC:24},{lap:70,hour:4.5,condition:'Damp',trackTempC:24,airTempC:19},{lap:90,hour:6,condition:'Wet',trackTempC:19,airTempC:17},{lap:378,hour:24,condition:'Dry',trackTempC:43,airTempC:28}]},
+ ready:{sessionId:'spa',condition:'Dry',trackTempC:24,forecast:[{lap:0,hour:0,condition:'Dry',trackTempC:24},{lap:8,hour:.25,condition:'Dry',trackTempC:23},{lap:16,hour:.5,condition:'Dry',trackTempC:22},{lap:23,hour:.75,condition:'Dry',trackTempC:21}]},
+ oneLap:{sessionId:'spa',condition:'Dry',trackTempC:24,forceOne:true,forecast:[{lap:0,hour:0,condition:'Dry',trackTempC:24},{lap:23,hour:.75,condition:'Dry',trackTempC:21}]}
+};
+const currentScenario=()=>scenarios[S.scenario];
+const fmt=(v,d=2)=>Number(v).toFixed(d),formatLap=sec=>`${Math.floor(sec/60)}:${(sec%60).toFixed(2).padStart(5,'0')}`;
+function setView(v){S.view=v;$('#preView').classList.toggle('hide',v!=='pre');$('#overlayView').classList.toggle('hide',v!=='overlay');$('#flatChoice').onclick=()=>{S.strategyMode='flat';S.editing=false;S.customPits=[];S.customResult=null;renderStrategyChoices(S.last);renderStrategySummary(S.last);draw(S.last)};
+$('#saveChoice').onclick=()=>{if(!S.last?.fuelSave?.available)return;S.strategyMode='save';S.editing=false;S.customPits=[];S.customResult=null;renderStrategyChoices(S.last);renderStrategySummary(S.last);draw(S.last)};
+$$('.rail button[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===v));if(v==='overlay')renderOverlay()}
+function buildInput(){const sc=currentScenario();return {sessionId:sc.sessionId,condition:sc.condition,compound:S.compound,source:S.source,recentN:S.recentN,bufferLaps:S.buffer,trackTempC:sc.trackTempC,forecast:sc.forecast,personalWetAllowed:sc.personalWetAllowed!==false}}
+function solve(){let r=B.solve(buildInput());if(currentScenario().forceOne&&r.status==='ok'){r=B.solve({...buildInput(),source:'recent',recentN:1})}S.last=r;return r}
+function renderCompounds(){const sess=B.SESSIONS[currentScenario().sessionId],opts=['Auto',...sess.availableCompounds],old=S.compound;$('#compound').innerHTML=opts.map(c=>`<option value="${c}">${c}</option>`).join('');S.compound=opts.includes(old)?old:'Auto';$('#compound').value=S.compound}
+function renderWeather(){const f=currentScenario().forecast;for(let i=0;i<4;i++){const d=f[Math.min(i,f.length-1)];$(`#w${i}`).textContent=d.condition;$(`#wTime${i}`).textContent=i===0?'START':i===3?'FINISH':`+${d.hour<1?Math.round(d.hour*60)+' MIN':d.hour+'H'}`;$(`#wMeta${i}`).textContent=`${Math.round(d.trackTempC||currentScenario().trackTempC)}°C track${d.airTempC?` · ${Math.round(d.airTempC)}°C air`:''}`}}
+function renderRaceFacts(r){const sess=B.SESSIONS[currentScenario().sessionId];$('#pageTitle').textContent=sess.track;$('#pageSub').textContent=`${sess.car} · ${sess.durationMin===1440?'24 hour race':`${sess.durationMin} min race`}`;$('#raceLength').textContent=sess.durationMin===1440?'24 hours':`${Math.floor(sess.durationMin/60)?Math.floor(sess.durationMin/60)+'h ':''}${sess.durationMin%60?`${sess.durationMin%60}m`:''}`.trim();const projected=r?.status==='ok'?Math.max(1,r.race.raceLaps-S.buffer):sess.estimatedRaceLaps;$('#raceLaps').textContent=`~${projected}${S.buffer?` + ${S.buffer} buffer`:''}`;$('#tyreAllocation').textContent=`${sess.tyreAllocationMax} dry max · Wet not counted`;$('#raceCompounds').textContent=sess.availableCompounds.join(' · ')}
+function updateSelectors(r){const sc=currentScenario(),sess=B.SESSIONS[sc.sessionId],compound=r.selectedCompound||B.optimalCompound({session:sess,condition:sc.condition}),avail=B.matching({sessionId:sc.sessionId,condition:sc.condition,compound}).length;if(S.source==='recent')S.recentN=avail?Math.min(Math.max(1,S.recentN),avail):0;$('#histN').textContent=avail?Math.min(S.recentN,avail):0;$('#histMinus').disabled=S.recentN<=1||avail===0;$('#histPlus').disabled=S.recentN>=avail||avail===0;$('#recentStepper').classList.toggle('hide',S.source==='qual');$('#qualBtn').classList.toggle('active',S.source==='qual');$('#histBtn').classList.toggle('active',S.source==='recent');$('#bufN').textContent=S.buffer}
+function activePlanResult(r){return S.editing&&S.customResult?.status==='ok'?S.customResult:null}
+function activeRace(r){
+  const custom=activePlanResult(r)?.plan;if(custom)return custom;
+  const rr=S.strategyMode==='save'&&r.fuelSave?.available?r.fuelSave.race:r.race;
+  return {stints:rr.stints,pits:rr.pits,stops:rr.stops,maxStintLaps:rr.maxStintLaps,dryTyresRemaining:rr.dryTyresRemaining};
+}
+function activeStrategy(r){
+  const cr=activePlanResult(r);
+  const plan=cr?.plan||(S.strategyMode==='save'&&r.fuelSave?.available?{stints:r.fuelSave.race.stints,pits:r.fuelSave.race.pits}:null);
+  if(!plan)return r.strategy;
+  const first=plan.stints[0],next=plan.pits[0];
+  return {startFuelL:first.fuelStartL,startVEPercent:first.veStartPercent,pitLap:next?.lap||null,addFuelL:next?.fuelTargetL||0,pitVEPercent:next?.veTargetPercent||0,fuelRatio:first.fuelRatio||1,tyres:next?.tyres||'No stop'};
+}
+function render(){renderCompounds();renderWeather();const r=solve(),sc=currentScenario();renderRaceFacts(r);$('#banner').innerHTML='';$('#empty').classList.add('hide');$('#strategyArea').classList.remove('hide');if(r.status!=='ok'){$('#strategyArea').classList.add('hide');$('#empty').classList.remove('hide');$('#empty').innerHTML=`<div class="eyebrow">No strategy available</div><h2>${r.message}</h2><p>Complete one clean matching lap.</p>`;updateSelectors(r);renderBackend(r);return}updateSelectors(r);const a=r.average,n=r.selection.laps.length;
+ $('#mFuel').textContent=`${fmt(a.fuelPerLap)} L/lap`;$('#mFuelSub').textContent=`${n} ${sc.condition.toLowerCase()} ${r.selectedCompound} laps`;
+ $('#mVE').textContent=`${fmt(a.vePerLap)}%/lap`;$('#mVESub').textContent=`${n} laps · ${fmt(a.trackTempC,1)}°C avg`;
+ $('#mWear').textContent=`${fmt(a.wearAvg)}%/lap`;$('#mWearSub').textContent=`Average of all 4 tyres`;
+ if(S.editing)recomputeCustom(r);renderStrategyChoices(r);renderStrategySummary(r);draw(r);renderBackend(r);if(S.view==='overlay')renderOverlay()}
+
+function renderStrategyChoices(r){
+  const flat=$('#flatChoice'),save=$('#saveChoice');
+  const fs=r.fuelSave;
+  $('#flatChoiceMain').textContent=`${r.race.stops} stop${r.race.stops===1?'':'s'} · ${r.race.stints.map(x=>x.laps).join(' / ')}`;
+  $('#flatChoiceSub').textContent=(r.recommendedMode==='flat'?'FASTEST · ':'')+'Normal consumption';
+  if(fs?.available){
+    save.classList.remove('hide');save.disabled=false;
+    $('#saveChoiceMain').textContent=`${fs.race.stops} stop${fs.race.stops===1?'':'s'} · ${fs.race.stints.map(x=>x.laps).join(' / ')}`;
+    const d=fs.deltaSec;
+    const deltaText=Math.abs(d)<.05?'same predicted time':d<0?`${Math.abs(d).toFixed(1)} s faster`:`+${d.toFixed(1)} s slower`;
+    $('#saveChoiceSub').textContent=`${r.recommendedMode==='save'?'FASTEST · ':''}${(fs.maxSaveFrac*100).toFixed(1)}% max save · ${deltaText}`;
+  }else{
+    save.classList.add('hide');save.disabled=true;
+    if(S.strategyMode==='save')S.strategyMode='flat';
+  }
+  flat.classList.toggle('active',S.strategyMode==='flat');
+  save.classList.toggle('active',S.strategyMode==='save');
+}
+
+function renderStrategySummary(r){const race=activeRace(r),st=activeStrategy(r);$('#strategySectionLabel').textContent=S.editing?'Custom strategy':(S.strategyMode==='save'?'Fuel Save':'Flat Out');$('#strategyName').textContent=S.editing?'CUSTOM STRATEGY':(S.strategyMode==='save'?'FUEL SAVE':'FLAT OUT');$('#strMain').textContent=`${race.stops} stops · Next pit ${st.pitLap?`lap ${st.pitLap}`:'—'}`;$('#compoundChosen').textContent=`${S.compound==='Auto'?'Auto':r.selectedCompound} · avg clean lap ${formatLap(r.average.lapTimeSec)}`;$('#startFuel').textContent=`${fmt(st.startFuelL,1)} L`;$('#startVE').textContent=`${fmt(st.startVEPercent,0)}%`;$('#ratio').textContent=fmt(st.fuelRatio,2);$('#tyres').textContent=st.tyres;const next=race.pits[0];$('#tyreWhy').textContent=next?`${next.tyres} at first stop`:'No tyre service planned';$('#net').textContent=`${race.stints.length} stints`;$('#lane').textContent=`${fmt(r.pit.laneLossSec,1)} s`;$('#service').textContent=next?`${fmt(next.serviceSec-(next.tyreAction?.service||0),1)} s`:'—';$('#tyreSvc').textContent=next?`${fmt(next.tyreAction?.service||0,1)} s`:'—';$('#compoundGraph').textContent=S.compound==='Auto'?'Auto':r.selectedCompound;renderDelta();$('#editStrategy').classList.toggle('hide',S.editing);$('#resetStrategy').classList.toggle('hide',!S.editing);$('#strategyEditor').classList.toggle('hide',!S.editing)}
+function renderDelta(){const el=$('#timeDelta');el.className='pill';if(!S.editing){
+  if(S.strategyMode==='save'&&S.last?.fuelSave?.available){
+    const d=S.last.fuelSave.deltaSec;
+    el.textContent=Math.abs(d)<.05?'vs Flat Out · 0.0 s':d<0?`${Math.abs(d).toFixed(1)} s faster than Flat Out`:`+${d.toFixed(1)} s vs Flat Out`;
+    el.classList.add(d<=0?'good':'time-slower');
+  }else{el.textContent='Flat Out baseline';el.classList.add('good')}
+  return
+}if(!S.customResult||S.customResult.status!=='ok'){el.textContent='Invalid plan';el.classList.add('time-invalid');return}const d=S.customResult.deltaSec;if(Math.abs(d)<.05){el.textContent='Same · 0.0 s';el.classList.add('good')}else if(d<0){el.textContent=`${Math.abs(d).toFixed(1)} s faster`;el.classList.add('time-faster')}else{el.textContent=`+${d.toFixed(1)} s slower`;el.classList.add('time-slower')}}
+function startEditing(){const r=S.last||solve();S.editing=true;S.customPits=r.race.pits.map(p=>({lap:p.lap,tyres:p.tyres,compound:p.compound||r.selectedCompound,fuelRatio:p.fuelRatio||1}));renderEditor();recomputeCustom(r);renderStrategySummary(r);draw(r)}
+function resetRecommended(){S.editing=false;S.customPits=[];S.customResult=null;$('#strategyRows').innerHTML='';renderStrategySummary(S.last);draw(S.last)}
+function renderEditor(){const rows=$('#strategyRows');rows.innerHTML='';const sess=B.SESSIONS[currentScenario().sessionId];S.customPits.forEach((p,i)=>{const row=document.createElement('div');row.className='strategy-row';row.innerHTML=`<b>P${i+1}</b><label><span class="label">Pit lap</span><input type="number" min="2" max="${S.last?.race?.raceLaps||999}" value="${p.lap}"></label><label><span class="label">Fuel ratio</span><input class="ratioBox" type="number" min="0.70" max="1.10" step="0.01" value="${Number(p.fuelRatio||1).toFixed(2)}"></label><label><span class="label">Tyres</span><select class="tyreSel"><option${p.tyres==='No tyres'?' selected':''}>No tyres</option><option${p.tyres==='FL + FR'?' selected':''}>FL + FR</option><option${p.tyres==='All 4'?' selected':''}>All 4</option></select></label><button class="remove" title="Remove stop">×</button><label style="grid-column:2/4"><span class="label">Next compound</span><select class="compoundSel">${sess.availableCompounds.map(c=>`<option${c===(p.compound||S.last.selectedCompound)?' selected':''}>${c}</option>`).join('')}</select></label>`;const inputs=row.querySelectorAll('input'),pitInput=inputs[0],ratioInput=inputs[1],tyreSel=row.querySelector('.tyreSel'),compoundSel=row.querySelector('.compoundSel'),rm=row.querySelector('.remove');const refresh=()=>{recomputeCustom(S.last);renderStrategySummary(S.last);draw(S.last)};pitInput.addEventListener('input',()=>{p.lap=Number(pitInput.value);refresh()});ratioInput.addEventListener('input',()=>{p.fuelRatio=Number(ratioInput.value);refresh()});tyreSel.addEventListener('change',()=>{p.tyres=tyreSel.value;refresh()});compoundSel.addEventListener('change',()=>{p.compound=compoundSel.value;refresh()});rm.addEventListener('click',()=>{S.customPits.splice(i,1);renderEditor();refresh()});rows.appendChild(row)})}
+function addStop(){const total=S.last.race.raceLaps,existing=S.customPits.map(x=>x.lap).sort((a,b)=>a-b);let lap=Math.round(total/2);while(existing.includes(lap)&&lap<total)lap++;S.customPits.push({lap,tyres:'No tyres',compound:S.last.selectedCompound,fuelRatio:1});S.customPits.sort((a,b)=>a.lap-b.lap);renderEditor();recomputeCustom(S.last);renderStrategySummary(S.last);draw(S.last)}
+function recomputeCustom(r){S.customResult=B.evaluateCustomStrategy({baseResult:r,pitEdits:S.customPits});const v=$('#strategyValidation');if(S.customResult.status==='ok')v.textContent=`Estimated race-time change: ${S.customResult.deltaSec>=0?'+':''}${S.customResult.deltaSec.toFixed(1)} s`;else v.textContent=S.customResult.evaluation?.violations?.[0]||'Invalid strategy'}
+function draw(r){
+  if(!r||r.status!=='ok')return;
+  const life=S.chart==='life',svg=$('#chart'),race=activeRace(r),total=r.race.raceLaps;
+  svg.style.width=`${760*S.chartZoom}px`;svg.style.height='250px';$('#zoomLabel').textContent=`${Math.round(S.chartZoom*100)}%`;
+  const x=l=>54+l/Math.max(1,total)*670,yl=v=>205-(v-20)/80*165,yp=v=>205-v/1.6*165;
+  const c={fl:'#f3b24b',fr:'#55b9e8',rl:'#5bd488',rr:'#858d99',grid:'#24313f',text:'#53606d',accent:'#b7ef49'};
+  const compoundColor={Soft:'#ff725e',Medium:'#f0c45c',Hard:'#c8d0d8',Wet:'#55b9e8',Auto:'#8f9aa6'};
+  const line=(pts,col,w=3)=>`<polyline points="${pts.map(([a,b])=>`${x(a)},${life?yl(b):yp(b)}`).join(' ')}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round"/>`;
+  let h='';
+  (life?[20,40,60,80,100]:[0,.4,.8,1.2,1.6]).forEach(v=>{const y=life?yl(v):yp(v);h+=`<line x1="54" y1="${y}" x2="724" y2="${y}" stroke="${c.grid}"/><text x="8" y="${y+4}" fill="${c.text}" font-size="10">${life?v+'%':'+'+v.toFixed(1)+'s'}</text>`});
+  const curve=r.tyre.curve;
+  for(const stint of race.stints){
+    if(life){for(const [k,col] of [['fl',c.fl],['fr',c.fr],['rl',c.rl],['rr',c.rr]])h+=line([[stint.startLap-1,stint.tyreStart[k]],[stint.endLap,stint.tyreEnd[k]]],col,k==='fl'||k==='fr'?3:2)}
+    else if(curve?.available){for(const [k,col] of [['fl',c.fl],['fr',c.fr],['rl',c.rl],['rr',c.rr]])h+=line([[stint.startLap-1,B.pacePrediction(curve,stint.tyreStart[k])?.sec||0],[stint.endLap,B.pacePrediction(curve,stint.tyreEnd[k])?.sec||0]],col,k==='fl'||k==='fr'?3:2)}
+    const bx=x(stint.startLap-1),bw=Math.max(2,x(stint.endLap)-bx);
+    h+=`<rect x="${bx}" y="212" width="${bw}" height="10" rx="3" fill="${compoundColor[stint.compound]||compoundColor.Auto}" opacity=".42"/><text x="${bx+4}" y="220" fill="${c.text}" font-size="7">${stint.compound}</text>`;
+  }
+  for(const pit of race.pits)h+=`<line x1="${x(pit.lap)}" y1="35" x2="${x(pit.lap)}" y2="205" stroke="${c.grid}" stroke-dasharray="2 4"/><text x="${x(pit.lap)+3}" y="46" fill="${c.text}" font-size="8">P${pit.afterStint||''}</text>`;
+  svg.innerHTML=h;
+  $('#chartTitle').textContent='Strategy';
+  $('#chartSub').textContent=life?'Tyre life + compound across each stint':'Personal degradation curve across the stint plan';
+  renderStintStrip(r,race);
+}
+function renderStintStrip(r,race){
+  const el=$('#stintStrip');el.innerHTML='';const total=Math.max(1,r.race.raceLaps);
+  const cls=c=>`compound-${String(c||'Auto').toLowerCase()}`;
+  race.stints.forEach((st,i)=>{
+    const pit=race.pits[i],avgEnd=((st.tyreEnd.fl+st.tyreEnd.fr+st.tyreEnd.rl+st.tyreEnd.rr)/4);
+    const box=document.createElement('div');box.className='stint-box';box.style.flexGrow=String(st.laps);box.style.flexBasis=`${Math.max(80,st.laps/total*700)}px`;
+    box.tabIndex=0;box.innerHTML=`<div class="stint-title">S${st.index} · ${st.laps} laps</div><div class="stint-meta">${st.compound} · VE ${Number(st.veStartPercent).toFixed(0)}%</div><div class="compound-bar ${cls(st.compound)}"></div><div class="stint-tip"><b>Stint ${st.index} · laps ${st.startLap}–${st.endLap}</b>Start fuel: ${Number(st.fuelStartL).toFixed(1)} L<br>Start VE: ${Number(st.veStartPercent).toFixed(0)}%<br>Fuel ratio: ${Number(st.fuelRatio||1).toFixed(2)}<br>Compound: ${st.compound}<br>Projected tyre avg at end: ${avgEnd.toFixed(1)}%${pit?`<br><br><b>Pit after stint</b>Target VE: ${Number(pit.veTargetPercent).toFixed(0)}%<br>Fuel target: ${Number(pit.fuelTargetL).toFixed(1)} L<br>Fuel ratio: ${Number(pit.fuelRatio||1).toFixed(2)}<br>Tyres: ${pit.tyres}<br>Next compound: ${pit.compound}`:''}</div>`;
+    el.appendChild(box);
+  });
+}
+function renderBackend(r){const clean=JSON.parse(JSON.stringify(r));if(clean.selection?.laps)clean.selection.laps=clean.selection.laps.map(l=>({id:l.id,session:l.session,compound:l.compound,lapTimeSec:+l.lapTimeSec.toFixed(3),fuelPerLap:+l.fuelPerLap.toFixed(3),vePerLap:+l.vePerLap.toFixed(3),minTyreRemaining:+l.minTyreRemaining.toFixed(1)}));$('#backendJson').textContent=JSON.stringify({strategyOptions:{flatOut:{stops:r.race?.stops,timeSec:r.planEvaluation?.totalTimeSec},fuelSave:r.fuelSave?{stops:r.fuelSave.race.stops,deltaSec:r.fuelSave.deltaSec,maxSavePct:r.fuelSave.maxSaveFrac*100,savePenaltySec:r.fuelSave.planEvaluation.savePenaltySec,modelSource:r.fuelSave.modelSource}:null},input:buildInput(),activeStrategy:S.editing?S.customResult:null,result:clean},null,2)}
+function signed(target,actual,unit){const d=target-actual;return{text:`${d>=0?'+':'−'}${Math.abs(d).toFixed(2)}${unit}`,cls:d>=0?'green':'red'}}
+function eventState(r){const e=S.event;if(e==='normal')return {actualMul:{f:.995,v:1.003,t:1.01},updated:null};if(e==='gt3Consumption')return {actualMul:{f:1.055,v:1.060,t:1.03},updated:{pit:`LAP ${Math.max(2,(activeStrategy(r).pitLap||10)-1)}`,details:`Earlier stop · VE target ${fmt(Math.min(100,activeStrategy(r).pitVEPercent+4),0)}% · ${activeStrategy(r).tyres}`,reason:'Consumption has stayed above target for several clean laps, so the current stint is one lap shorter.'}};if(e==='gt3SlowZone')return {actualMul:{f:.94,v:.92,t:.99},updated:{pit:`LAP ${(activeStrategy(r).pitLap||10)+1}`,details:`Race projection −1 lap · same tyre plan`,reason:'Slow Zone pace reduced the projected race distance, allowing the stint to extend.'}};if(e==='gt3Drizzle')return {actualMul:{f:.98,v:.97,t:1.02},updated:null,message:'Brief drizzle detected. Wet-tyre crossover does not recover the pit cost before the track is forecast to dry.'};if(e==='gt3Incident')return {actualMul:{f:1.01,v:1.02,t:1.55},updated:{pit:'PIT THIS LAP',details:`${r.selectedCompound} · All 4 tyres`,reason:'The tyre-loss spike after the spin makes an unscheduled tyre stop faster than completing the stint.'}};if(e==='telemetryLoss')return {telemetryLost:true,actualMul:{f:1,v:1,t:1},updated:null,message:'Telemetry lost. Holding the last valid strategy until LMU data resumes.'};if(e==='missedPit')return {actualMul:{f:1.01,v:1.015,t:1.02},updated:{pit:'NEXT LAP',details:`Replanned fuel / VE · ${activeStrategy(r).tyres}`,reason:'The planned pit entry was missed; the remaining race has been solved again from the current state.'}};if(e==='consumption')return {actualMul:{f:1.045,v:1.038,t:1.08},updated:{pit:`LAP ${Math.max(1,(activeStrategy(r).pitLap||12)-1)}`,details:`Earlier stop · +${fmt(activeStrategy(r).addFuelL,0)} L · VE ${fmt(activeStrategy(r).pitVEPercent,0)}%`,reason:'Fuel and VE consumption have moved above the loaded plan.'}};if(e==='incident')return {actualMul:{f:1.02,v:1.01,t:1.35},updated:{pit:'PIT THIS LAP',details:`${r.selectedCompound} · All 4 tyres`,reason:'Incident invalidated the current stint and tyre projection.'}};if(e==='rainEarly'){const wet=r.weather;return {actualMul:{f:.97,v:.96,t:1.02},updated:{pit:wet?.recommendation==='Switch to Wet'?'PIT THIS LAP':'HOLD CURRENT',details:wet?.recommendation==='Switch to Wet'?`4 WETS · ${fmt(wet.switchCostSec,1)} s switch cost`:'Stay on slicks',reason:'Road wetness is increasing earlier than the pre-race forecast.'}};return {actualMul:{f:1,v:1,t:1},updated:null}}}
+function currentUpdate(r){const ev=eventState(r);if(S.acceptedUpdate&&S.acceptedUpdate.event===S.event)return {...ev,updated:null,accepted:S.acceptedUpdate.plan};if(S.dismissedUpdate===S.event)return {...ev,updated:null};return ev}
+function renderOverlay(){const r=S.last||solve();if(r.status!=='ok')return;const ev=currentUpdate(r),tar={f:r.average.fuelPerLap,v:r.average.vePerLap,t:r.average.wearAvg},act={f:tar.f*(ev.actualMul?.f||1),v:tar.v*(ev.actualMul?.v||1),t:tar.t*(ev.actualMul?.t||1)};$('#expanded').classList.toggle('hide',!S.expanded);if(ev.telemetryLost){$('#ft').textContent='—';$('#fa').textContent='Telemetry lost';$('#vt').textContent='—';$('#va').textContent='Telemetry lost';$('#tt').textContent='—';$('#ta').textContent='Telemetry lost';['#fd','#vd','#td'].forEach(id=>$(id).textContent='');$('#overlayMsg').textContent=ev.message;$('#newPlan').classList.add('hide');updateActionHint();return}$('#ft').textContent=`${fmt(tar.f)} L/lap`;$('#fa').textContent=`Actual ${fmt(act.f)} L/lap`;$('#vt').textContent=`${fmt(tar.v)}% / lap`;$('#va').textContent=`Actual ${fmt(act.v)}% / lap`;$('#tt').textContent=`${fmt(tar.t)}% / lap`;$('#ta').textContent=`Actual ${fmt(act.t)}% / lap`;[['#fd',signed(tar.f,act.f,' L/lap')],['#vd',signed(tar.v,act.v,'% / lap')],['#td',signed(tar.t,act.t,'% / lap')]].forEach(([id,d])=>{$(id).textContent=d.text;$(id).className=`diff ${d.cls}`});const base=activeStrategy(r),accepted=ev.accepted;$('#pit').textContent=accepted?.pit|| (base.pitLap?`LAP ${base.pitLap}`:'—');$('#pitDetails').textContent=accepted?.details || (base.pitLap?`+${fmt(base.addFuelL,0)} L · VE ${fmt(base.pitVEPercent,0)}% · ${base.tyres}`:'No stop');if(ev.updated){$('#newPit').textContent=ev.updated.pit;$('#newDetails').textContent=ev.updated.details;$('#newReason').textContent=ev.updated.reason;$('#newPlan').classList.remove('hide');$('#overlayMsg').textContent=''}else{$('#newPlan').classList.add('hide');$('#overlayMsg').textContent=ev.message||'Current strategy remains optimal.'}updateActionHint()}
+function updateActionHint(){const hasUpdate=!$('#newPlan').classList.contains('hide');if(!S.expanded){$('#actionHint').textContent='Tap: expand overlay'}else if(hasUpdate){$('#actionHint').textContent='Tap: keep current · Hold: replace with updated strategy'}else{$('#actionHint').textContent='Tap: compact view'}}
+function keepCurrentStrategy(){
+  const hasUpdate=!$('#newPlan').classList.contains('hide');
+  if(hasUpdate)S.dismissedUpdate=S.event;
+  S.expanded=false;
+  renderOverlay();
+}
+function replaceWithUpdatedStrategy(){
+  if(!S.expanded)return;
+  const r=S.last||solve(),ev=eventState(r);
+  if(ev.updated&&!S.dismissedUpdate){
+    S.acceptedUpdate={event:S.event,plan:ev.updated};
+    S.dismissedUpdate=null;
+    S.expanded=false;
+    renderOverlay();
+  }
+}
+function shortAction(){
+  if(!S.expanded){S.expanded=true;renderOverlay();return}
+  const hasUpdate=!$('#newPlan').classList.contains('hide');
+  if(hasUpdate){keepCurrentStrategy();return}
+  S.expanded=false;renderOverlay();
+}
+function longAction(){replaceWithUpdatedStrategy()}
+function pressDown(){if(S.pressDown)return;S.pressDown=true;S.longTriggered=false;S.pressStart=performance.now();$('#pressFill').style.width='0%';S.pressTimer=setTimeout(()=>{if(S.pressDown){S.longTriggered=true;$('#pressFill').style.width='100%';longAction()}},650)}
+function pressUp(){if(!S.pressDown)return;const held=performance.now()-S.pressStart;S.pressDown=false;clearTimeout(S.pressTimer);if(!S.longTriggered&&held<650)shortAction();$('#pressFill').style.width='0%'}
+function resetEventAck(){S.acceptedUpdate=null;S.dismissedUpdate=null}
+$$('.rail button[data-view]').forEach(b=>b.onclick=()=>setView(b.dataset.view));$('#scenario').onchange=e=>{S.scenario=e.target.value;S.strategyMode='flat';S.compound='Auto';S.source='qual';S.recentN=10;S.editing=false;S.customPits=[];S.customResult=null;S.chartZoom=1;resetEventAck();render()};$('#liveEvent').onchange=e=>{S.event=e.target.value;resetEventAck();renderOverlay()};$('#compound').onchange=e=>{S.compound=e.target.value;S.strategyMode='flat';S.recentN=10;S.editing=false;render()};$('#qualBtn').onclick=()=>{S.source='qual';render()};$('#histBtn').onclick=()=>{S.source='recent';render()};$('#histMinus').onclick=()=>{S.recentN=Math.max(1,S.recentN-1);render()};$('#histPlus').onclick=()=>{const sc=currentScenario(),sess=B.SESSIONS[sc.sessionId],c=S.compound==='Auto'?B.optimalCompound({session:sess,condition:sc.condition}):S.compound,avail=B.matching({sessionId:sc.sessionId,condition:sc.condition,compound:c}).length;S.recentN=Math.min(avail,S.recentN+1);render()};$('#bufMinus').onclick=()=>{S.buffer=Math.max(0,S.buffer-1);S.editing=false;render()};$('#bufPlus').onclick=()=>{S.buffer=Math.min(5,S.buffer+1);S.editing=false;render()};$('#lifeBtn').onclick=()=>{S.chart='life';$('#lifeBtn').classList.add('active');$('#paceBtn').classList.remove('active');draw(S.last)};$('#paceBtn').onclick=()=>{S.chart='pace';$('#paceBtn').classList.add('active');$('#lifeBtn').classList.remove('active');draw(S.last)};$('#zoomIn').onclick=()=>{S.chartZoom=Math.min(5,S.chartZoom+.5);draw(S.last)};$('#zoomOut').onclick=()=>{S.chartZoom=Math.max(1,S.chartZoom-.5);draw(S.last)};$('#panLeft').onclick=()=>$('#chartViewport').scrollBy({left:-280,behavior:'smooth'});$('#panRight').onclick=()=>$('#chartViewport').scrollBy({left:280,behavior:'smooth'});$('#editStrategy').onclick=startEditing;$('#resetStrategy').onclick=resetRecommended;$('#addStop').onclick=addStop;$('#load').onclick=()=>{if(S.editing&&S.customResult?.status!=='ok')return;S.expanded=false;resetEventAck();setView('overlay')};$('#back').onclick=()=>setView('pre');$('#compact').onclick=shortAction;
+$('#keepCurrentBtn').onclick=keepCurrentStrategy;
+$('#replaceStrategyBtn').onclick=replaceWithUpdatedStrategy;
+const action=$('#actionBtn');action.addEventListener('pointerdown',e=>{e.preventDefault();action.setPointerCapture?.(e.pointerId);pressDown()});action.addEventListener('pointerup',e=>{e.preventDefault();pressUp()});action.addEventListener('pointercancel',pressUp);document.addEventListener('keydown',e=>{if(e.code==='Space'&&S.view==='overlay'&&!['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName)){e.preventDefault();if(!e.repeat)pressDown()}});document.addEventListener('keyup',e=>{if(e.code==='Space'&&S.view==='overlay'){e.preventDefault();pressUp()}});function poll(){const pads=navigator.getGamepads?navigator.getGamepads():[],pressed=[...pads].some(p=>p&&p.buttons[0]?.pressed);if(S.view==='overlay'){if(pressed&&!poll.last)pressDown();if(!pressed&&poll.last)pressUp()}poll.last=pressed;if(S.pressDown&&!S.longTriggered)$('#pressFill').style.width=`${Math.min(100,(performance.now()-S.pressStart)/650*100)}%`;requestAnimationFrame(poll)}requestAnimationFrame(poll);$('#reset').onclick=()=>location.reload();render();setView('pre');
+})();
+</script>
+</body></html>
