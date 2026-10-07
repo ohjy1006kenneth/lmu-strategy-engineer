@@ -1,0 +1,28 @@
+# Build
+bin/
+obj/
+out/
+dist/
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+
+# Local app data
+*.db
+*.sqlite
+*.sqlite3
+data/
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+.env
+.env.*
+!.env.example
