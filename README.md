@@ -23,13 +23,14 @@ The current `prototype/index.html` is an **executable UX reference using synthet
 
 ## Documentation
 
-There are intentionally only five project docs:
+There are intentionally only six project docs:
 
 1. **[HANDOFF](docs/HANDOFF.md)** — start here for Hermes/orchestration and implementation order.
 2. **[PRODUCT](docs/PRODUCT.md)** — product scope, UI/UX and accepted behavior.
-3. **[ENGINEERING](docs/ENGINEERING.md)** — architecture, strategy algorithms, data model and LMU integration.
-4. **[TESTING](docs/TESTING.md)** — reusable simulator, 17 canonical scenarios, invariants and result policy.
-5. **[RESEARCH](docs/RESEARCH.md)** — public references and unresolved implementation questions.
+3. **[ENGINEERING](docs/ENGINEERING.md)** — production stack, project architecture, persistence and LMU adapter boundaries.
+4. **[BACKEND](docs/BACKEND.md)** — strategy-generation equations, models, scoring and backend function contracts.
+5. **[TESTING](docs/TESTING.md)** — reusable simulator, 17 canonical scenarios, invariants and result policy.
+6. **[RESEARCH](docs/RESEARCH.md)** — public references and unresolved implementation questions.
 
 Do not create or modify `AGENTS.md`; the repository owner manages it separately.
 
