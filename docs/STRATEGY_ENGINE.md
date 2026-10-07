@@ -201,21 +201,88 @@ The user should not need to drive every car/track/compound combination before Au
 
 Dry and wet models remain separate.
 
-If a personal wet model exists, use it.
+### Personal wet data first
 
-If not, a temporary fallback may normalize field pace rather than copy the fastest opponent's absolute time.
+If the user has a usable personal Wet model for the current car/track/road-condition region, use it.
 
-A wet switch is worthwhile when:
+### No personal wet data: normalized field fallback
+
+If rain arrives mid-race and the user has slick data but no usable personal Wet data, the engine may temporarily estimate Wet pace from other cars **without copying the fastest driver's absolute lap time**.
+
+Preferred source order:
+
+1. user's personal Wet model,
+2. normalized same-car field data,
+3. normalized same-class field data,
+4. no Wet prediction if field evidence is insufficient.
+
+The fallback should estimate how much slower the field becomes in Wet conditions relative to each driver's own comparable Dry baseline.
+
+For opponent i:
 
 ~~~
-future time saved on wet tyres
+wet_factor_i =
+    representative_wet_lap_i
+  / representative_dry_lap_i
+~~~
+
+Use only comparable, valid samples:
+- same car when possible, otherwise same class,
+- exclude pit in/out laps,
+- exclude yellow / Slow Zone / Safety Car laps,
+- exclude obvious incidents,
+- require a minimum number of stable Wet samples,
+- prefer laps close to the current road-wetness / track-condition region.
+
+Combine opponent factors using a robust statistic such as a median or trimmed median:
+
+~~~
+field_wet_factor = robust_median(wet_factor_i)
+~~~
+
+Then project the user's Wet pace:
+
+~~~
+predicted_user_wet_pace =
+    user_dry_baseline
+  * field_wet_factor
+~~~
+
+At the same time, measure the user's **actual current slick pace** as the road gets wetter.
+
+The decision is therefore based on:
+
+~~~
+predicted_user_wet_pace
+vs
+measured_or_predicted_user_slick_pace_at_current_wetness
+~~~
+
+Do not use:
+
+~~~
+fastest wet driver lap = user's predicted wet lap
+~~~
+
+because driver skill differences would bias the estimate.
+
+The field fallback is temporary. As soon as the user completes enough valid personal Wet laps in comparable conditions, transition toward the personal model and stop relying on the field estimate.
+
+### Wet switch economics
+
+A Wet switch is worthwhile when:
+
+~~~
+future time saved on Wet tyres
 >
 wet tyre service
 + additional pit-lane loss if off-cycle
 + cold/outlap effects
 ~~~
 
-The engine must also handle wet -> dry, not only dry -> wet.
+If the car is already stopping for Fuel/VE, the pit-lane loss is already being paid and only the marginal Wet-tyre/service consequence should be charged.
+
+The engine must also handle Wet -> Dry, not only Dry -> Wet, and should use hysteresis so forecast/road-wetness noise does not cause repeated Slick/Wet recommendation flicker.
 
 ## User-edited strategy
 
