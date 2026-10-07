@@ -1,397 +1,199 @@
 # Engineering Specification
 
+This document defines the **production technology and architecture boundaries**.
+
+For strategy equations, candidate generation, plan scoring and backend function contracts, use **[BACKEND.md](BACKEND.md)**.
+
 ## Technology stack
 
 ### Runtime
 
 - C#
 - .NET 10 LTS
-- Windows projects target `net10.0-windows`
+- Windows-specific projects target `net10.0-windows`
 
-### UI
+### Desktop UI
 
 - WPF / XAML
 - MVVM
 - `CommunityToolkit.Mvvm` is a reasonable lightweight choice
 
-Why WPF:
-- Windows-only V1
-- mature Win32 interop
-- transparent/borderless overlay support
-- suitable for always-on-top / no-activate behavior
-- straightforward integration with Raw Input, HID and shared memory
+WPF is preferred because V1 is Windows-only and the product requires:
 
-Do not use Electron, Tauri, React or WebView as the production architecture.
+- mature Win32 interop,
+- transparent/borderless windows,
+- always-on-top and no-activate overlay behavior,
+- global input,
+- shared-memory/native integration,
+- custom strategy visualization.
+
+Do not use Electron, Tauri, React or WebView as the primary production architecture.
 
 ### Persistence
 
 - SQLite
 - `Microsoft.Data.Sqlite`
-- explicit schema/migrations
+- explicit schema migrations
 
-Persist useful session/lap/model data rather than indiscriminate high-frequency telemetry.
+Persist useful session/lap/model state rather than indiscriminate high-frequency telemetry.
 
 ### Input
 
-Primary production path:
+Primary global control path:
 
 - Windows Raw Input / HID
 
-Keyboard/gamepad/wheel support should work while LMU owns focus.
+Wheel/gamepad/keyboard strategy controls must work while LMU owns focus.
 
 ### Visualization
 
-Implement the strategy timeline in native WPF drawing/custom controls.
+Implement the strategy timeline as a native WPF custom control/drawing surface.
 
-Use SkiaSharp only later if profiling/design complexity justifies it.
+Prefer WPF drawing primitives first. Evaluate SkiaSharp only if later profiling or visual complexity justifies it.
 
-### Testing/logging
+### Testing and logging
 
 - xUnit
 - structured logging, preferably Serilog
 
-## Architecture
+## Project structure
 
-Separate:
-
-1. LMU adapter
-2. persistence/model learning
-3. strategy engine
-4. desktop UI
-5. overlay
-
-The strategy engine consumes immutable snapshots and never reads telemetry directly.
-
-## Core domain
-
-### StrategyInput
-
-Contains:
-
-- session constraints
-- current vehicle/race state
-- forecast
-- driver models
-- pit-service model
-- buffer laps
-- loaded strategy
-- optional user-edited constraints
-
-### StrategyResult
-
-Contains:
-
-- Flat Out candidate
-- optional Fuel Save candidate
-- recommended candidate
-- confidence/coverage
-- material-change explanation
-
-### RacePlan
+Recommended:
 
 ~~~text
-RacePlan
-  Stint[]
-  Pit[]
-  predicted finish
-  dry tyre inventory remaining
-  predicted total time
-  confidence
+src/
+  LmuStrategy.Domain/
+  LmuStrategy.Strategy/
+  LmuStrategy.Simulation/
+  LmuStrategy.Persistence/
+  LmuStrategy.LmuAdapter/
+  LmuStrategy.Windows/
+  LmuStrategy.Overlay/
+
+tests/
+  LmuStrategy.Strategy.Tests/
+  LmuStrategy.Simulation.Tests/
+  LmuStrategy.LmuAdapter.Tests/
 ~~~
 
-### Stint
-
-At minimum:
-
-- index
-- start/end lap
-- lap count
-- compound
-- starting Fuel
-- starting VE
-- Fuel Ratio
-- target Fuel/lap
-- target VE/lap
-- saving intensity
-- predicted tyre start/end
-- predicted pace/degradation
-
-### Pit
-
-At minimum:
-
-- pit lap
-- target Fuel
-- target VE
-- Fuel Ratio
-- tyre action
-- next compound
-- pit-lane loss
-- service time
-- incremental cost
-
-## Timed race projection
-
-LMU V1 is treated as timed-race focused.
-
-Do not freeze an estimated lap count before the race.
-
-Maintain a rolling estimate from:
-
-- time remaining
-- robust current pace
-- expected pit loss
-- neutralization/race-control state
-
-Buffer laps extend strategy energy coverage, not official race duration.
-
-## Flat Out
-
-Flat Out means normal modeled consumption and pace.
-
-Optimize:
-
-- race-start Fuel
-- race-start VE
-- stop count
-- pit laps
-- refill amounts
-- Fuel Ratio
-- tyre changes
-- compound
-
-Do not force start VE = 100%.
-Do not force minimum start VE.
-
-Compare carrying more physical fuel against future pit service saved.
-
-## Fuel Save
-
-Show only when a distinct feasible candidate exists.
-
-Internally evaluate options such as:
-
-- extending first stint
-- extending later stints
-- eliminating a splash
-- eliminating a full stop
-- uneven saving by stint
-
-Economics:
+Dependency direction:
 
 ~~~text
-NetFuelSaveBenefit =
-    PitTimeAvoided
-  + ServiceTimeAvoided
-  - DrivingTimeLostWhileSaving
-  - AdditionalTyreCost
+Domain
+  ↑
+Strategy / Simulation / Persistence / LMU Adapter
+  ↑
+Windows App / Overlay
 ~~~
 
-### Personal saving model
+Rules:
 
-Desired learned relationship:
+- Domain contains data/contracts, not UI.
+- Strategy is deterministic for the same input and never reads LMU directly.
+- Simulation drives the same strategy APIs used by production.
+- LMU Adapter translates external game state into stable domain snapshots.
+- Persistence stores lap/session/model history but does not decide strategy.
+- WPF App and Overlay consume strategy results; they do not own strategy equations.
+
+## Runtime data flow
 
 ~~~text
-consumption reduction -> corrected lap-time penalty
+LMU
+  ↓
+LMU Adapter
+  ↓
+Session / Telemetry / Scoring snapshots
+  ├──> Persistence + model learning
+  └──> StrategyInput
+           ↓
+       Strategy Core
+           ↓
+       StrategyResult
+         ├──> Pre-race UI
+         └──> Overlay
 ~~~
 
-A simple early personal model may be convex:
+Live strategy is receding-horizon:
 
 ~~~text
-DeltaTimeSave = a*s + b*s^2
+loaded plan
+ -> observe current race
+ -> update clean model state / fast deviations
+ -> project remaining timed race
+ -> solve remaining strategy
+ -> compare against loaded plan
+ -> surface only material action changes
 ~~~
 
-Before sufficient personal coverage, a documented empirical prior may be used with lower confidence.
+## Domain ownership
 
-## Tyres
+Core domain types include:
 
-### Wear
+- `StrategyInput`
+- `StrategyResult`
+- `RacePlan`
+- `Stint`
+- `Pit`
+- `RaceState`
+- `VehicleState`
+- `LapRecord`
+- tyre/energy/weather model snapshots
+- capability/provenance records
 
-UI shows average four-tyre wear.
+Detailed required fields and equations are in `BACKEND.md`.
 
-Backend keeps FL/FR/RL/RR separately.
+Use explicit units in names or types:
 
-Simple projection:
+- `LapTimeSeconds`
+- `FuelLitres`
+- `FuelPerLapLitres`
+- `VePercent`
+- `TyreRemainingPercent`
 
-~~~text
-remaining_next =
-    remaining_now
-  - wear_per_lap * laps
-~~~
+Do not pass ambiguous unitless doubles across subsystem boundaries when a dedicated value type is practical.
 
-### Pace loss
+## Persistence model
 
-Wear prediction and pace-loss prediction are separate.
+Persist enough lap context to reproduce model selection later.
 
-Possible personal degradation model:
-
-~~~text
-x = fraction of tyre life used
-DeltaTimeTyre = a*x + b*x^2
-~~~
-
-Extrapolation is allowed, but uncertainty must increase outside observed coverage.
-
-### Change economics
-
-~~~text
-Keep:
-  cumulative predicted tyre-related pace loss
-
-Change:
-  tyre service
-  + cold/outlap penalty
-  + pit-lane loss if extra stop
-  + dry tyre inventory consequence
-~~~
-
-If already stopping for Fuel/VE, pit-lane loss is already paid; compare marginal tyre-service cost.
-
-### Dry allocation
-
-Wet tyres never decrement dry tyre allocation.
-
-Track dry inventory across the whole race.
-
-### Compound selection
-
-Do not treat Soft / Medium / Hard as a universal fast-to-slow ladder.
-
-Auto should begin from:
-
-1. compounds actually available in the event,
-2. verified LMU condition/recommendation metadata,
-3. personal wear/degradation economics.
-
-## Lap data and model partitioning
-
-Persist enough context to reproduce model selection later.
-
-A clean lap should include:
+A lap record should capture, when available:
 
 - driver/car/class/track/layout/session identity
-- lap/sector times
+- lap and sector timing
 - Fuel start/end/used
 - VE start/end/used
-- Fuel Ratio / engine-map context
+- Fuel Ratio / mode context
 - compound
-- tyre age/remaining/wear per corner
+- tyre age, remaining and wear per corner
 - road-condition family
 - road wetness
 - track/air temperature
-- RealRoad/grip context if available
-- validity/race-control/incident/traffic flags
-- game build / schema / physics/BOP identity when available
+- RealRoad/grip state
+- pit/formation/race-control/incident/traffic validity
+- game build / schema / physics/BOP identity
 
-### Filtering
+Keep raw high-frequency telemetry only if a defined future feature needs it.
 
-Hard reject from normal learning:
+## Database versioning
 
-- incomplete lap
-- pit in/out
-- formation
-- telemetry loss
-- severe incident/spin
+Use explicit migrations.
 
-Exclude neutralized laps from normal pace learning:
+At minimum maintain tables or equivalent entities for:
 
-- yellow
-- Slow Zone
-- Safety Car
+- sessions
+- laps
+- model metadata
+- fitted model parameters
+- capability/build snapshots
+- user preferences
 
-Traffic can still help consumption while being downweighted/corrected for pace.
-
-### Model keys
-
-Tyre model at minimum:
-
-~~~text
-driver + car + track/layout + road-condition family + compound
-~~~
-
-Fuel/VE should generally survive dry compound changes:
-
-~~~text
-driver + car + track/layout + road-condition family + relevant environment
-~~~
-
-## Weather and no-personal-Wet fallback
-
-Dry and Wet models remain separate.
-
-### Preferred source order
-
-1. personal Wet model
-2. normalized same-car field data
-3. normalized same-class field data
-4. no Wet prediction if evidence is insufficient
-
-Do **not** copy the fastest Wet driver's absolute lap time.
-
-For usable opponent `i`:
-
-~~~text
-wet_factor_i =
-    representative_wet_lap_i
-  / representative_dry_lap_i
-~~~
-
-Use comparable valid samples:
-
-- same car preferred, otherwise same class
-- reject pit laps
-- reject yellow / Slow Zone / Safety Car laps
-- reject obvious incidents
-- require enough stable Wet samples
-- prefer samples near the current road-wetness / track-condition region
-
-Combine with a robust statistic:
-
-~~~text
-field_wet_factor = robust_median(wet_factor_i)
-~~~
-
-Then:
-
-~~~text
-predicted_user_wet_pace =
-    user_dry_baseline
-  * field_wet_factor
-~~~
-
-At the same time measure/predict the user's current slick pace as the track gets wetter.
-
-Wet crossover compares:
-
-~~~text
-predicted user Wet pace
-vs
-user slick pace at current wetness
-~~~
-
-The field fallback is temporary. As valid personal Wet laps accumulate, transition toward the personal model.
-
-If opponent compound is not reliably exposed, do not label a field lap as a Wet-tyre sample solely because it is raining. Reduce or disable the fallback unless the adapter has sufficient evidence.
-
-Use hysteresis to prevent Slick/Wet recommendation flicker.
-
-Wet switch economics:
-
-~~~text
-future Wet time saved
->
-Wet tyre service
-+ extra pit-lane loss if off-cycle
-+ cold/outlap effects
-~~~
-
-If already stopping, pit-lane loss is already paid.
+Every stored model should retain enough provenance to know which source/build/data produced it.
 
 ## LMU adapter
 
-A value being visible in LMU's UI does not prove external readability.
+A value being visible in LMU's UI does **not** prove an external application can read it.
 
-Suggested capability-oriented adapter:
+Expose capability-oriented interfaces, conceptually:
 
 ~~~text
 GetSession()
@@ -410,7 +212,7 @@ Potential transports:
 - shared memory / memory-mapped structures
 - local REST / Swagger
 
-Every field must be classified as:
+The adapter must classify required data as:
 
 - verified current shared-memory field
 - verified current REST field
@@ -418,38 +220,105 @@ Every field must be classified as:
 - cached
 - unavailable
 
-Persist current build/schema/capabilities.
+Persist:
 
-Never make a hard-coded car fuel-capacity table the primary source.
+- game build
+- adapter/schema version
+- capability flags
 
-## Pit estimate
+On schema/build change, fail closed: unknown/missing fields become unavailable rather than being silently reinterpreted.
+
+## Fuel capacity
+
+Use the current loaded car/session capacity only when verified from LMU.
+
+Do not make a hard-coded car-name-to-capacity database the primary source.
+
+If capacity is unavailable, expose that capability failure to the strategy core instead of inventing a number.
+
+## Tyre integration
+
+When verified, expose:
+
+- legal/available compounds
+- dry tyre inventory
+- tyre-management options
+- compound-condition recommendation metadata
+
+Wet tyres must never decrement the dry-tyre inventory ledger.
+
+## Opponent timing for Wet fallback
+
+The strategy backend can use normalized same-car/same-class opponent pace when the user has no personal Wet model.
+
+The adapter's responsibility is to expose only opponent observations that can be supported by current LMU data:
+
+- lap/sector timing
+- class/car identity
+- race-control/pit context where available
+- tyre compound only if reliably exposed
+
+Do not infer "Wet tyre" solely from rainfall if opponent compound is not observable.
+
+The exact normalization equations are in `BACKEND.md`.
+
+## Pit-service integration
 
 Preferred source order:
 
-1. verified current LMU estimate
-2. app-maintained values validated against the current build
-3. explicit low-confidence fallback
+1. verified current LMU pit/service estimate,
+2. app-maintained model validated against the current game build,
+3. explicit lower-confidence fallback.
 
-Do not require a user calibration pit stop just to use the app.
+Do not require the user to perform a calibration stop just to use the product.
 
-## Live replanning
+Keep pit-service provenance visible to the strategy core.
 
-~~~text
-loaded plan
- -> observe race
- -> update model state
- -> project remaining race
- -> optimize remaining race
- -> compare to loaded plan
- -> surface only material action change
-~~~
+## Overlay architecture
 
-A material change can include:
+Use a WPF borderless transparent window plus Win32 styles where necessary for:
 
-- next pit lap
-- stop count
-- tyre action
-- compound
-- Wet/Slick crossover
-- meaningful Fuel/VE target change
-- predicted race-distance change
+- always-on-top,
+- no activation,
+- click-through behavior,
+- exclusion from normal task-switching when appropriate.
+
+Do not place the strategy engine inside the overlay process/view model.
+
+The overlay receives a small immutable presentation state from the application/service layer.
+
+## Global input
+
+Use Raw Input / HID as the primary direction.
+
+Required semantic action:
+
+- tap compact -> expand
+- tap expanded/no update -> compact
+- tap with strategy update -> Keep Current
+- long press with strategy update -> Replace
+
+Keep the physical binding configurable and separate from those semantic actions.
+
+## Packaging
+
+Phase 1:
+
+- standard Visual Studio / `dotnet` development build.
+
+Initial distribution:
+
+- self-contained Windows x64 publish.
+
+Choose installer/updater technology after the core app works. Packaging must not block strategy/backend implementation.
+
+## Failure boundaries
+
+Subsystem failure must degrade explicitly:
+
+- LMU adapter loss -> hold last valid live state where safe
+- database write failure -> strategy continues with in-memory state and logs warning
+- unsupported LMU capability -> feature disabled/degraded, not fabricated
+- overlay failure -> core strategy/session service should remain alive where practical
+
+Backend-specific failure behavior is detailed in `BACKEND.md`.
