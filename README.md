@@ -1,71 +1,72 @@
 # LMU Strategy Engineer
 
-A local Le Mans Ultimate (LMU) race-strategy application that learns from the driver's own laps, builds pre-race strategies, and continuously adapts the plan during the race.
+A standalone Windows race-strategy application for **Le Mans Ultimate**.
 
-## Product
+It learns from the driver's own laps, builds pre-race Flat Out / Fuel Save strategies, and continuously re-evaluates the remaining race as Fuel, VE, tyres, weather and race conditions change.
 
-The application has two primary surfaces:
+## Status
 
-- **Pre-race desktop app** — race/session information, forecast, strategy-data source, driver averages, Flat Out / Fuel Save recommendations, editable stint plan, tyre strategy, and predicted race-time deltas.
-- **In-race overlay** — minimal Fuel / VE / tyre-wear targets plus live strategy-change decisions.
+Product specification and interactive prototype are complete enough to begin production implementation.
 
-The application is **LMU-only for V1**. It is not intended to become a setup analyzer, generic telemetry dashboard, spotter/radar, multi-sim framework, or cloud team-management product.
+The current `prototype/index.html` is an **executable UX reference using synthetic data**. It is not the production application.
 
-## Product principles
+## Production stack
 
-1. **Personal first.** Fuel, VE, tyre wear, tyre pace loss, and fuel-saving cost should converge toward the user's own driving data.
-2. **Do not invent confidence.** If a usable model does not exist, show that limitation instead of fabricating certainty.
-3. **LMU owns hard constraints.** Session length, fuel capacity, tyre availability, tyre inventory, weather and game-defined pit behavior should come from LMU whenever the current build exposes them.
-4. **Optimize total race time.** Fuel, VE, fuel saving, pit loss, tyre service, tyre degradation, weather and compound choice are solved together.
-5. **Live but quiet.** Recalculate continuously, but surface an Updated Strategy only when the optimum changes materially.
-6. **Keep the UI decision-focused.** Avoid generic dashboard clutter.
-
-## Current state
-
-This repository begins from an interactive browser prototype. The prototype uses synthetic fixtures and exists to communicate product behavior and strategy logic; it is **not** the intended production architecture.
-
-The intended production target is a standalone Windows application with a clean separation between:
-
-- LMU integration,
-- persistent driver/lap data,
-- strategy/model libraries,
-- pre-race UI,
-- transparent in-race overlay,
-- global wheel / keyboard / gamepad input.
-
-## Strategy concepts
-
-The user-facing optimizer exposes at most two useful strategies:
-
-- **Flat Out** — normal measured consumption and pace.
-- **Fuel Save** — shown only when a distinct feasible saving strategy exists.
-
-The backend may evaluate many candidate stint layouts internally, but the UI should present only the best Flat Out and best Fuel Save options.
+- C# / .NET 10 LTS
+- WPF desktop app + in-game overlay
+- pure C# strategy/domain libraries
+- SQLite / `Microsoft.Data.Sqlite`
+- verified LMU shared memory + local REST/Swagger behind an adapter
+- Windows Raw Input / HID for global wheel controls
+- xUnit deterministic simulation tests
+- structured local logging
 
 ## Documentation
 
-Start here if you are implementing or orchestrating work:
+There are intentionally only five project docs:
 
-1. [Orchestration Handoff](docs/ORCHESTRATION_HANDOFF.md)
-2. [Project Brief](docs/PROJECT_BRIEF.md)
-3. [Architecture](docs/ARCHITECTURE.md)
-4. [Strategy Engine](docs/STRATEGY_ENGINE.md)
-5. [Data Model](docs/DATA_MODEL.md)
-6. [LMU Integration](docs/LMU_INTEGRATION.md)
-7. [UI / UX](docs/UI_UX.md)
-8. [Testing](docs/TESTING.md)
-9. [Simulation Results](docs/SIMULATION_RESULTS.md)
-10. [Engineering Decisions](docs/DECISIONS.md)
-11. [Roadmap](docs/ROADMAP.md)
-12. [Research Notes](docs/RESEARCH_NOTES.md)
-13. [Open Questions](docs/OPEN_QUESTIONS.md)
+1. **[HANDOFF](docs/HANDOFF.md)** — start here for Hermes/orchestration and implementation order.
+2. **[PRODUCT](docs/PRODUCT.md)** — product scope, UI/UX and accepted behavior.
+3. **[ENGINEERING](docs/ENGINEERING.md)** — architecture, strategy algorithms, data model and LMU integration.
+4. **[TESTING](docs/TESTING.md)** — reusable simulator, 17 canonical scenarios, invariants and result policy.
+5. **[RESEARCH](docs/RESEARCH.md)** — public references and unresolved implementation questions.
+
+Do not create or modify `AGENTS.md`; the repository owner manages it separately.
 
 ## Prototype
 
-The latest interactive prototype is at [prototype/index.html](prototype/index.html), with a concise behavior reference at [prototype/README.md](prototype/README.md). It uses synthetic data and is a product-design artifact, not production code.
+Open:
 
-Historical stress-test artifacts are committed under `tests/simulations/`.
+`prototype/index.html`
 
-## Current implementation priority
+Use it to understand interaction and visual behavior. Do not copy its temporary synthetic constants/equations into production without validation.
 
-The next engineering milestone is to create the production solution and domain boundaries, then replace synthetic fixtures with an LMU adapter and persistent local lap database while preserving the behavior documented in this repository.
+## Simulation results
+
+Canonical simulator output belongs in:
+
+~~~text
+simulation-results/<ScenarioName>/
+  report.md
+  summary.json
+  lap_log.csv
+~~~
+
+Each new run overwrites the previous files for that scenario. Do not create timestamped committed result folders; Git history is the history.
+
+## Product principles
+
+- LMU only for V1.
+- Personal driver data becomes the normal baseline.
+- Game-defined constraints come from verified LMU interfaces.
+- Strategy optimizes complete predicted race time, not one metric.
+- Flat Out and optional Fuel Save are the user-facing strategy choices.
+- Dry/Wet models remain separate.
+- Wet tyres do not consume dry tyre allocation.
+- Timed-race lap count is continuously projected.
+- Live replanning is automatic but intentionally quiet.
+- The overlay only asks the driver to act when the recommended plan materially changes.
+
+## Next step
+
+Follow `docs/HANDOFF.md` and build the production .NET solution, domain model, reusable simulator and initial strategy engine before polishing the WPF UI.
