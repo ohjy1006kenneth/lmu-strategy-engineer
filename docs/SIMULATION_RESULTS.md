@@ -1,71 +1,50 @@
 # Simulation Results
 
-The current browser prototype has been stress-tested with synthetic races. These are design/algorithm validation fixtures, not claims about exact LMU physics.
+## Storage location
 
-## 24-hour Le Mans Hypercar stress test
+Current canonical simulation outputs belong in the root-level:
 
-Purpose:
-- prove the original two-stint solver was insufficient,
-- test arbitrary-length planning,
-- exercise weather, neutralization and long-race tyre allocation.
+`simulation-results/`
 
-Key finding:
-- the original model incorrectly represented "first stint + entire remaining race."
-- this directly motivated the arbitrary-length RacePlan architecture.
+Each canonical scenario owns one fixed directory:
 
-A later medium-driver endurance simulation used:
-- deliberately slower-than-professional pace,
-- lap-time variation,
-- multi-class traffic,
-- weather transitions,
-- consumption drift,
-- incident,
-- telemetry loss,
-- neutralization,
-- dry-tyre allocation pressure.
+~~~text
+simulation-results/<ScenarioName>/
+  report.md
+  summary.json
+  lap_log.csv
+~~~
 
-The resulting architecture requirement is now permanent:
-- every stint and pit must be a first-class object,
-- dry tyre allocation is tracked across the whole race,
-- rolling timed-race distance must be recalculated.
+A new run **overwrites** those same files.
 
-## 1h45 Le Mans LMGT3 stress test
+Do not create timestamped committed results for ordinary runs. Git history already provides historical versions.
 
-A synthetic average-sim-racer profile was used, with approximately 4:12 clean baseline pace and several seconds of normal lap variation.
+Randomized stress/Monte-Carlo output should normally be temporary and uncommitted.
 
-The projection produced roughly:
-- 25 predicted race laps,
-- +1 buffer lap,
-- 26-lap strategy distance,
-- capacity-limited stint length around 12 laps in the fixture.
+## Historical prototype simulations
 
-The test exercised:
-- traffic,
-- off-track lap rejection,
-- aggressive consumption,
-- Slow Zone,
-- short drizzle,
-- telemetry dropout,
-- spin/tyre scrub,
-- late shower.
+Earlier product-design work used ad-hoc synthetic race scripts, including:
+- a 24-hour Le Mans Hypercar stress race,
+- a 1h45 Le Mans LMGT3 average-sim-racer race.
 
-Representative backend reactions:
-- sustained Fuel/VE drift moved the pit earlier,
-- Slow Zone was excluded from pace learning,
-- a short drizzle did not justify Wets because crossover gain could not repay pit/service cost,
-- telemetry loss froze the last valid strategy,
-- a spin lap was rejected from clean learning,
-- a late shower with too little race remaining did not trigger an unnecessary Wet stop.
+Those runs were useful for discovering architectural problems but are not the target simulation architecture.
 
-## Important limitation
+Key findings retained from those tests:
+- a two-stint solver is structurally invalid for endurance racing,
+- timed-race lap count must be rolling rather than permanently fixed,
+- dry tyre allocation must be whole-race state,
+- Wet tyres must not decrement dry tyre allocation,
+- neutralized laps must not contaminate normal pace learning,
+- short showers should not automatically trigger Wet tyres,
+- telemetry loss should hold the last valid strategy,
+- consumption drift can materially change pit timing.
 
-The synthetic Fuel/lap, VE/lap, tyre wear, tank sizes and some service constants used in these tests are fixtures.
+## Standardized simulator
 
-Production behavior must replace them with:
-- verified current LMU values,
-- personal driver models,
-- or explicitly lower-confidence fallbacks.
+Going forward there is one reusable simulator and **17 canonical timed-race scenarios**.
 
-## Future simulation suite
+The canonical definitions and result policy are in:
 
-The production repository should convert these ideas into deterministic automated scenarios rather than relying on browser-prototype-only testing.
+`docs/TESTING.md`
+
+The existing historical files should be treated as reference data only until they are replaced by results generated through the standardized simulator.
