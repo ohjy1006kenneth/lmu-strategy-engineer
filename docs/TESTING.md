@@ -360,15 +360,38 @@ Verify:
 - Replace makes the updated plan current,
 - no Recalculate button exists.
 
+## Public distribution and personal synchronization tests
+
+The 17 canonical racing simulations remain unchanged and are not a substitute for server, privacy or multi-user verification. Before public distribution, implement automated tests for:
+
+- **Per-user data isolation:** register users A and B; ensure distinct server SQLite files and reject every API read/write/export/delete from A targeting B, including guessed IDs and concurrent requests.
+- **Local database lifecycle:** fresh install, offline first launch, schema upgrades, corrupt/inaccessible database, full local disk, and preservation of personal model provenance.
+- **Account link:** safely associate an existing offline local database with a newly registered account; retry without duplicate uploads; refuse accidental reassignment of another user's history.
+- **End-to-end offline recovery:** record laps with the server stopped or the network disconnected; maintain strategy and overlay operation; reconnect and verify all records are received exactly once.
+- **Idempotency:** retry an already-committed upload, replay out-of-order batches, interrupt transfers mid-request, and ensure unique logical records and correct acknowledgement.
+- **Multi-device convergence:** two Windows installations signed into the same account both collect new laps; verify data converges without duplication; concurrently edit a preference/model and verify conflict-safe reconciliation (never blind overwrite).
+- **Deletion and privacy:** propagate deleted records with tombstones, respect retention and explicit user-data export/account deletion semantics, revoke tokens, and verify no other account is affected.
+- **Server SQLite consistency:** per-account concurrent requests, WAL integrity, connection lifecycle, schema migrations, rollback and backup/restore under an isolated test mount.
+- **HDD safety:** simulate missing/unmounted/read-only Pi USB drive and full filesystem; API must fail closed and must not create server database files on the NVMe mountpoint.
+- **Security and exposure:** authentication bypass, per-user authorization/IDOR, path traversal, rate and payload limits, replay, leaked secrets in client/logs, HTTPS-only external ingress, non-public SQLite/SMB/admin ports.
+- **Operational failure:** restart/redeploy sync API during active requests; simulate failed USB I/O, unreachable Tunnel, timeout, and revoked credentials without affecting desktop race strategy.
+- **Distribution:** install/upgrade/uninstall the Windows desktop build without losing its local DB; verify Windows CI builds, WPF rendering, and actual game integration separately from Linux tests.
+
+Use disposable accounts and temporary SQLite fixtures. Do not run destructive data tests against real registered users' server databases.
+
+A green simulation suite alone must never be used to label the public sync deployment production-ready. Publication requires documented backup/restore drills, measured Pi/HDD load and resource limits, availability/outage messaging, and manual authorization for any destructive schema migration of populated user databases.
+
 ## Test tiers
 
 ### Per-commit regression
 - all 17 canonical scenarios using the Average driver unless a scenario specifies otherwise,
+- sync-contract and security unit tests once the public sync modules exist,
 - unit tests,
 - invariant checks,
 - UI/component tests.
 
 ### Extended/nightly
+- isolated per-user API, multi-device sync, mount-loss and backup/restore integration suites,
 - Fast and Casual profile variants,
 - multiple deterministic seeds,
 - broader weather/event parameter sweeps,
