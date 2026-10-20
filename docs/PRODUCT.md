@@ -2,7 +2,7 @@
 
 ## Product identity
 
-LMU Strategy Engineer is a local Le Mans Ultimate race-strategy application.
+LMU Strategy Engineer is a publicly distributed Windows application for Le Mans Ultimate. Race-strategy computation remains local; an authenticated personal sync service stores a second, individually isolated copy of each registered user's data on the developer's Raspberry Pi.
 
 The goal is:
 
@@ -27,6 +27,8 @@ It should feel like a high-quality pit-stop calculator whose inputs are filled a
 - compact and expanded in-race overlay
 - configurable wheel / keyboard / gamepad input
 - local persistent learning
+- per-user accounts and private server-side personal-data backup/synchronization
+- offline operation with deferred sync and explicit sync/account status
 
 ### Out of scope
 
@@ -36,7 +38,8 @@ It should feel like a high-quality pit-stop calculator whose inputs are filled a
 - racing-line coaching
 - generic AI chat
 - multi-sim support in V1
-- team cloud/server features
+- shared/team strategy workspaces or sharing another user's private data
+- cloud execution of live strategy decisions
 - Stream Deck-specific workflows
 
 ## Core product principles
@@ -47,6 +50,22 @@ It should feel like a high-quality pit-stop calculator whose inputs are filled a
 4. **Optimize total race time.** Fuel, VE, saving, tyres, weather and pit costs belong in one strategy.
 5. **Live but quiet.** Replan often, notify only when action materially changes.
 6. **Minimal UI.** Show race decisions, not a generic dashboard.
+
+## Personal data and public distribution
+
+This is a public product, not a single-user app installed only on the developer's PC.
+
+- Every installed Windows client maintains its own local personal SQLite database. Local lap/session/model data remains usable with no Internet, even when the Pi is down.
+- Each **registered** user has a separate, private SQLite database on the Pi's USB HDD, associated with that user through authenticated server-side identity. Data from different users must never share a personal-data database.
+- Authentication is required for online synchronization. Offline-first use may begin before registration, but the first successful account link must create or associate the user's server database safely. Do not merge two previously independent accounts without an explicit user-driven procedure.
+- The server copy is a private replica/backup and sync destination, not the strategy engine or a required telemetry connection. Local gameplay, learning, and overlays must continue during network or server failures.
+- Synchronization may be delayed, so local and server copies need not match at every moment. Show clear states for pending changes, last successful sync, conflicts, offline mode, and errors. Never claim data is backed up before the server acknowledges it.
+- Provide an explicit account-data export and deletion path before public release; explain retention and any backup-recovery delay honestly. No public sharing, cross-user recommendations, or training on other users' driving data is implied.
+- Handle concurrent edits from more than one user device for the same account without silently overwriting data. Exact merge/conflict UX remains a design decision, but data loss is never an acceptable default.
+- Collect only data needed for the stated personal strategy features. High-frequency raw telemetry uploads are not a default V1 requirement.
+- Public release must include a privacy notice and transparent service-availability expectations; a self-hosted Pi is not guaranteed 24/7 infrastructure.
+
+Cloud sync changes the storage and account experience only. It does not change the accepted pre-race/overlay design, local solver, or LMU telemetry ownership.
 
 ## Pre-race screen
 
