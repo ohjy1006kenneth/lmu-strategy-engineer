@@ -31,9 +31,12 @@ Do not use Electron, Tauri, React or WebView as the primary production architect
 
 ### Persistence
 
-- SQLite
-- `Microsoft.Data.Sqlite`
-- explicit schema migrations
+- **Desktop:** each installation has its own local SQLite database, using Microsoft.Data.Sqlite, with explicit migrations and durable offline-first lap/session/model storage.
+- **Server:** each registered account has a **separate SQLite database file**, stored on the Raspberry Pi's mounted USB HDD. Other users' personal records must never be stored in that file.
+- **Transport:** authenticated, versioned HTTPS sync API built with cross-platform ASP.NET Core. Clients never connect to SQLite, SMB, or a database port over the network.
+- **Data ownership:** the Windows copy is authoritative for live session observations and in-race decisions. Server storage is a delayed personal replica/backup and sync destination; it is never required to run the strategy engine.
+- **Identity:** a protected account-to-database mapping/identity registry is necessary; that small control-plane registry is distinct from the required one-personal-database-per-account storage layout.
+- **Migrations:** both client and server databases require explicit forward-compatible schema versioning. See the public storage/sync requirements below.
 
 Persist useful session/lap/model state rather than indiscriminate high-frequency telemetry.
 
@@ -66,6 +69,9 @@ src/
   LmuStrategy.Strategy/
   LmuStrategy.Simulation/
   LmuStrategy.Persistence/
+  LmuStrategy.SyncContracts/
+  LmuStrategy.SyncClient/
+  LmuStrategy.SyncServer/
   LmuStrategy.LmuAdapter/
   LmuStrategy.Windows/
   LmuStrategy.Overlay/
@@ -74,6 +80,8 @@ tests/
   LmuStrategy.Strategy.Tests/
   LmuStrategy.Simulation.Tests/
   LmuStrategy.LmuAdapter.Tests/
+  LmuStrategy.Persistence.Tests/
+  LmuStrategy.Sync.Tests/
 ~~~
 
 Dependency direction:
@@ -93,11 +101,14 @@ Rules:
 - Simulation drives the same strategy APIs used by production.
 - LMU Adapter translates external game state into stable domain snapshots.
 - Persistence stores lap/session/model history but does not decide strategy.
+- SyncContracts and SyncClient depend on shared data contracts, not Windows UI or live LMU telemetry.
+- SyncServer is a separate ASP.NET Core application: it authenticates accounts, enforces tenant isolation, and syncs personal data without strategy calculations.
+- The local strategy engine, UI, and overlay never depend on server availability.
 - WPF App and Overlay consume strategy results; they do not own strategy equations.
 
 ## Development and test topology
 
-Hermes runs on a Raspberry Pi 5 / Raspberry Pi OS, so keep most of the solution cross-platform.
+Hermes runs on a Raspberry Pi 5 / Ubuntu Server ARM64, so keep most of the solution cross-platform. The public sync API is an independent deployable service on that Pi; do not combine it with the Hermes gateway process.
 
 ~~~text
 Raspberry Pi / Linux
@@ -107,6 +118,8 @@ Raspberry Pi / Linux
 - Persistence
 - LMU adapter abstractions
 - xUnit + 17 canonical simulations
+- Sync contracts, schema migration and isolated multi-user API tests
+- Optional integration tests against a disposable local mounted-volume fixture
 
 GitHub Actions / Windows
 - full solution build
@@ -115,11 +128,19 @@ GitHub Actions / Windows
 - win-x64 publish check
 
 Windows gaming PC / real LMU
+- local SQLite and offline sync-client tests
 - shared-memory/REST verification
 - overlay behavior
 - Raw Input / wheel controls
 - live integration validation
 ~~~
+
+Raspberry Pi / Ubuntu Server deployment
+- ASP.NET Core authenticated personal sync API listening on a private/loopback endpoint
+- Application binaries, service configuration and logs on NVMe
+- One user SQLite database per account on the mounted 1 TB USB HDD
+- Cloudflare Tunnel for HTTPS public ingress; no exposed SQLite/SMB/admin ports
+- Explicit HDD mount dependencies, backups, resource isolation and health checks
 
 Keep Windows-specific code isolated in Windows-targeted projects such as:
 
@@ -149,6 +170,23 @@ Session / Telemetry / Scoring snapshots
        StrategyResult
          ├──> Pre-race UI
          └──> Overlay
+~~~
+
+Personal backup/sync is a separate asynchronous path that must not block the strategy loop:
+
+~~~text
+Windows desktop
+  local personal.db (SQLite) ──> durable outbound change queue
+                                  |
+                                  | authenticated HTTPS / TLS when online
+                                  v
+Raspberry Pi sync API ──> authenticate and authorize account ──>
+  /srv/nas/lmu-strategy-engineer/users/<opaque-account-id>/personal.db
+
+Remote accepted changes ──> local merge/revision checks ──> local personal.db
+
+Any outage or sync conflict ──> explicit status / retry / user decision;
+                                 strategy and overlay continue locally
 ~~~
 
 Live strategy is receding-horizon:
@@ -226,6 +264,38 @@ At minimum maintain tables or equivalent entities for:
 - user preferences
 
 Every stored model should retain enough provenance to know which source/build/data produced it.
+
+## Public per-user storage topology
+
+**For the public app, registered users have two separate personal databases:**
+
+1. Windows desktop: a local SQLite file in the user's application data directory (example: LocalApplicationData/LMUStrategyEngineer/personal.db). It must not require administrative privileges or write to the program installation directory. If the same account uses several PCs, each installation gets a local SQLite database.
+2. Pi server: one private SQLite file per account on the mounted USB HDD, e.g. /srv/nas/lmu-strategy-engineer/users/<opaque-account-id>/personal.db. The opaque directory name must be generated server-side and must never be derived from a user-controlled path, email address or display name.
+
+The HDD is the persistent store for server **personal user databases**. The Pi NVMe may hold the server code, service configuration, logs and a minimal protected identity/tenant registry, but must not substitute an NVMe personal-data database for the mandated HDD layout.
+
+HDD filesystem should be a locally mounted Linux filesystem with correct file locking (ext4 is suitable). Each server SQLite database is opened by server-owned processes only. SQLite WAL sidecars must remain on the same local filesystem; do not serve database files over SMB, NFS, Cloudflare Tunnel, or a client-mounted network share. Restrict account database directories to the service identity and maintain explicit account-level authorization in the API; filesystem isolation alone is not sufficient. Provide bounded connection/transaction concurrency per user.
+
+Before handling requests, the service verifies that the configured HDD filesystem is actually mounted, writable, and the expected volume. If it is disconnected, unmounted or read-only, **fail closed**, expose a health/readiness failure, and never create new personal databases on the underlying NVMe mountpoint.
+
+The Pi is the developer-operated hosting platform and currently a single point of failure. A working API or Cloudflare Tunnel is not proof of production reliability. Implement off-device encrypted backups, database-consistent snapshots/restore tests, resource isolation from Hermes and the NAS, free-space monitoring, and a documented maintenance/outage policy before public release.
+
+## Authenticated personal synchronization
+
+The server's role is registration/login/account recovery, tenant authorization and syncing *only that account's personal data*. It does not run strategy calculations and must not read live LMU telemetry from the game.
+
+- Use a versioned HTTPS API, exposed through the existing Cloudflare Tunnel, with authenticated per-request account identity, standard secure token/session lifecycle, revocation, timeouts, rate limits and input/size limits. Keep internal APIs and administrative services private.
+- Choose and document a maintained authentication implementation (and account recovery/verification policy) before public rollout. The account registry maps authenticated identity to an opaque user database. Client-provided account IDs or database paths are never trusted authorization.
+- Record stable globally unique logical record IDs, origin device IDs, a schema/sync protocol version, per-record revision and deletion markers, and idempotent client operation IDs. Use durable local pending-change queues with acknowledgements only after the server transaction commits.
+- Pull server changes incrementally using a durable, account-scoped server sequence/cursor; retries or repeated batches must not create duplicate laps or corrupt trained model provenance.
+- Support local writes and strategy evaluation with no network. A network loss, unavailable Pi, expired token, or full HDD must **never** prevent a race from continuing. The app visibly distinguishes unsynced, syncing, synced, authentication-required, conflicted and error states.
+- Define deterministic reconciliation for append-only lap observations and revision-checked updates of editable preferences/model state. For simultaneous conflicting edits from multiple devices, retain both versions or request a user resolution; **never** silently apply last-writer-wins or erase data. Propagate deletes with durable tombstones and explicitly defined retention windows.
+- Account linking of previously offline client data must be explicit and idempotent. Do not automatically mix one user's offline history with another account merely because a device is reused or a user signs in.
+- Provide user-accessible data export, account deletion (including server personal DB and associated identity mapping), privacy notice, retention/backup policy, and clear reporting of deletion/backup-lag semantics. Do not treat a server copy as an independently durable backup unless a verified off-host backup exists.
+- Default sync to compact personal session, lap, model and settings records. Do not upload continuous high-frequency raw telemetry, wheel identifiers, local credentials, or unrelated PC files without an approved necessity.
+- Use authenticated per-user API contract tests and cross-account IDOR tests. Never create an unauthenticated endpoint for arbitrary DB enumeration, file downloads or database administration.
+
+Server-side account isolation and synchronization correctness are **release-blocking**. The exact endpoint names, account provider and user-facing merge UX should be settled as versioned contracts in scoped implementation issues before code is shipped.
 
 ## LMU adapter
 
@@ -340,6 +410,8 @@ Keep the physical binding configurable and separate from those semantic actions.
 
 ## Packaging
 
+The Windows executable is distributed publicly, while the authenticated Pi sync API is a **separately deployed server component**. Never embed server administrative credentials, database paths, or private API tokens in the client installer. Publish only client-safe configuration such as the HTTPS origin. Provide client/server protocol compatibility and upgrade gates before public distribution.
+
 Phase 1:
 
 - standard Visual Studio / `dotnet` development build.
@@ -355,7 +427,10 @@ Choose installer/updater technology after the core app works. Packaging must not
 Subsystem failure must degrade explicitly:
 
 - LMU adapter loss -> hold last valid live state where safe
-- database write failure -> strategy continues with in-memory state and logs warning
+- local database write failure -> strategy continues with in-memory state and logs warning
+- server unavailable / token expired / sync failure -> continue local operation and queue changes, show explicit sync status
+- server HDD unavailable -> sync API refuses writes and remains unready; never fall back to NVMe for users' personal databases
+- sync conflict -> preserve both versions/evidence and require deterministic reconciliation, not silent overwrite
 - unsupported LMU capability -> feature disabled/degraded, not fabricated
 - overlay failure -> core strategy/session service should remain alive where practical
 

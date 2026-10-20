@@ -74,6 +74,24 @@ Study public behavior and requirements; do not copy proprietary/private implemen
 - Verify Raw Input/HID across common wheelbases while LMU owns focus.
 - Tune configurable long-press threshold; prototype uses roughly 650 ms.
 
+## Public account, synchronization and hosting questions
+
+These require explicit product/security decisions before implementing public sync:
+
+- Which supported account-login, verification, password recovery and token revocation scheme is appropriate for a self-hosted public service without unplanned recurring costs?
+- What UX links offline-local history to an account? Should local-only use remain available without registration, and how are shared-PC sign-outs or account switches isolated?
+- What is the approved merge policy for simultaneous edits to preferences, models and annotations across two signed-in PCs? Which objects can merge automatically and which must prompt for a conflict decision?
+- What record identity, revision, idempotency key, tombstone retention and cursor protocol guarantees convergence without duplicate laps or data loss?
+- What upload frequency, batch sizes, offline queue ceiling and server disk quotas work for the Pi 5 and its 1 TB USB HDD?
+- Which retention windows apply to personal data, deleted records, revoked accounts and off-host encrypted backups?
+- How are account export/delete requests verified, processed, and transparently reported when old backups expire later?
+- How is the sync API isolated from Hermes, public Docker apps, and NAS users, and what are the measured HDD throughput and concurrent-user limits?
+- Which Cloudflare Tunnel hostname, authentication boundary, abuse/rate limiting and incident response policies will be used for public access?
+- What happens to registered users if the Pi/HDD is offline, loses data, or the operator eventually moves to a paid hosting provider?
+- Does the server need an account/control-plane registry on NVMe, and how will that registry be securely backed up and kept consistent with the separate per-user HDD databases?
+
+Do not treat these unanswered implementation choices as permission to skip mandatory isolation, backup, or data-loss protections.
+
 ## Product questions
 
 - Material-strategy-improvement threshold before showing Updated Strategy.

@@ -26,9 +26,10 @@ Build a standalone Windows strategy application for **Le Mans Ultimate** that:
 - creates pre-race Flat Out and, when useful, Fuel Save strategies,
 - lets the user edit the strategy and compare predicted race-time deltas,
 - continuously replans during the race,
-- only interrupts the driver when a materially better plan exists.
+- only interrupts the driver when a materially better plan exists,
+- serves a public Windows user base with one local SQLite database per user installation and one isolated server SQLite database per registered user on the Pi's USB HDD, synchronized through an authenticated API.
 
-Do not turn the product into a setup analyzer, generic telemetry dashboard, spotter, multi-sim framework or cloud team product.
+Do not turn the product into a setup analyzer, generic telemetry dashboard, spotter, multi-sim framework or shared cloud team product. Personal account backup/sync **is** in scope; cloud live strategy execution is not.
 
 ## Production stack
 
@@ -37,7 +38,8 @@ Use:
 - C# / .NET 10 LTS
 - WPF for desktop UI and overlay
 - pure C# domain/strategy libraries with no UI dependency
-- SQLite via `Microsoft.Data.Sqlite`
+- SQLite via `Microsoft.Data.Sqlite` (local Windows user DB and private Pi HDD per-user DB)
+- cross-platform ASP.NET Core personal sync API; local strategy remains fully offline-capable
 - verified LMU shared memory and local REST/Swagger behind an adapter
 - Windows Raw Input / HID for global wheel/button input
 - xUnit for unit/simulation tests
@@ -53,6 +55,9 @@ src/
   LmuStrategy.Strategy/
   LmuStrategy.Simulation/
   LmuStrategy.Persistence/
+  LmuStrategy.SyncContracts/
+  LmuStrategy.SyncClient/
+  LmuStrategy.SyncServer/
   LmuStrategy.LmuAdapter/
   LmuStrategy.Windows/
   LmuStrategy.Overlay/
@@ -73,11 +78,11 @@ Strategy / Simulation / Persistence / LMU Adapter
 Windows App / Overlay
 ~~~
 
-The UI can depend on the core. The core must never depend on WPF.
+The UI can depend on the core. The core must never depend on WPF. The server sync project must not depend on Windows/UI/LMU adapter implementations; preserve local Domain and Strategy isolation.
 
 ## Development environment
 
-Hermes runs on a Raspberry Pi 5 / Linux.
+Hermes runs on a Raspberry Pi 5 / Ubuntu Server ARM64. The Pi also hosts the public authenticated sync service, with **per-user SQLite databases on the mounted USB HDD** and application code/configuration on the NVMe. Implement safe mount checks before serving write traffic.
 
 Do most development and testing there using the cross-platform Domain, Strategy, Simulation, Persistence and adapter-abstraction projects.
 
@@ -86,6 +91,26 @@ Use:
 - The Windows gaming PC only for real LMU integration, overlay and wheel/input validation.
 
 Keep Windows-only code isolated so Linux development never blocks backend work.
+
+## Autonomous development ownership
+
+This repository is one of three projects managed by a single Hermes multiplexed gateway. LMU has four dedicated profiles: lmu-lead, lmu-implementer, lmu-code-reviewer, and lmu-visual-reviewer. Only the lead needs direct Discord routing; collaboration evidence belongs in linked Hermes Kanban cards, and GitHub Issues/PRs/CI are the durable integration record.
+
+Role model preferences (verify availability in the installed Hermes version):
+- Lead: GPT-6.1 Sol (high), fallback Kimi K2.8 Preview.
+- Implementer: Kimi K3-256K (high), fallback GPT-6 Luna.
+- Code reviewer: GPT-6.1 Sol (high), fallback Kimi K2.8 Preview.
+- Visual reviewer: Kimi K2.8 Preview (high), fallback GPT-6 Luna.
+
+The two Codex credentials are one provider pool; a role gets exactly one fallback model. Follow provider usage terms: do not use a membership credential for prohibited unattended work. If no compliant provider is available, persist state and retry rather than skipping review.
+
+The external continuity controller owns dispatch/reconciliation across task completions, provider cooldowns, reviewer handoffs and restarts; it must not assume a lead chat remains running. Work in isolated branches, apply deterministic tests and independent code and visual reviews, and check actual Windows/WPF artifacts rather than claiming Linux renders represent WPF. Keep a single heavy worker globally on the Pi initially. Preserve the repo's instruction not to create or edit AGENTS.md.
+
+## Public sync delivery boundary
+
+Public distribution requires local-and-remote **per-user** SQLite persistence, secure account identity, independently scoped server database files, an authenticated versioned HTTPS sync API, offline retries, conflict-safe synchronization, export/delete, backup and restore, and privacy/abuse controls. The Pi USB drive is **not** a local network database clients may open directly.
+
+Do not deploy or advertise the sync service as production-ready until tenant-isolation, migration, conflict, offline-recovery, load, and backup/restore gates in TESTING.md pass. A live Pi NAS or a functioning Cloudflare Tunnel is not evidence that a secure public API has been built.
 
 ## First implementation milestone
 
@@ -99,7 +124,7 @@ Before polished UI:
 6. implement a basic arbitrary-length Flat Out planner,
 7. enforce Fuel/VE/tyre invariants,
 8. create LMU adapter interfaces plus capability detection,
-9. establish SQLite schema/migrations,
+9. establish local SQLite schema/migrations and sync-safe record identities; plan an isolated per-user server schema and migration process,
 10. add structured logging and repeatable tests.
 
 Then begin wiring verified LMU data.
@@ -194,7 +219,7 @@ A strong first implementation leaves:
 - initial Flat Out arbitrary-length planner,
 - invariant tests,
 - LMU adapter capability interfaces,
-- local database schema,
+- local database schema and a documented per-user server/sync design (the full public sync service may follow the core milestone),
 - concise developer setup instructions.
 
 It does not need polished production UI yet.
