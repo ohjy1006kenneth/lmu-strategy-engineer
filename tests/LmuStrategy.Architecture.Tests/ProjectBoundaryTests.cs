@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Reflection;
 using System.Text.Json;
 using System.Xml.Linq;
 
@@ -109,12 +110,15 @@ public sealed class ProjectBoundaryTests
 
     private static string FindRepositoryRoot()
     {
-        DirectoryInfo? directory = new(AppContext.BaseDirectory);
-        while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "docs", "ENGINEERING.md")))
+        string root = typeof(ProjectBoundaryTests).Assembly
+            .GetCustomAttributes<AssemblyMetadataAttribute>()
+            .Single(attribute => attribute.Key == "RepositoryRoot").Value!;
+        if (!File.Exists(Path.Combine(root, "LmuStrategy.slnx")))
         {
-            directory = directory.Parent;
+            throw new DirectoryNotFoundException(
+                "Architecture tests require the source checkout recorded at build time. Rebuild after moving the checkout.");
         }
 
-        return directory?.FullName ?? throw new DirectoryNotFoundException("Repository root not found.");
+        return root;
     }
 }

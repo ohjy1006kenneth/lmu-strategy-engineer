@@ -24,11 +24,11 @@ jobs:
           test "$(uname -m)" = aarch64
           dotnet --info
       - name: Restore portable solution
-        run: dotnet restore LmuStrategy.Core.slnx
+        run: dotnet restore LmuStrategy.Core.slnx --artifacts-path "${{ runner.temp }}/core-artifacts"
       - name: Build portable solution
-        run: dotnet build LmuStrategy.Core.slnx --configuration Release --no-restore
+        run: dotnet build LmuStrategy.Core.slnx --configuration Release --no-restore --artifacts-path "${{ runner.temp }}/core-artifacts"
       - name: Test portable solution
-        run: dotnet test LmuStrategy.Core.slnx --configuration Release --no-build --logger trx --results-directory TestResults
+        run: dotnet test LmuStrategy.Core.slnx --configuration Release --no-build --artifacts-path "${{ runner.temp }}/core-artifacts" --logger trx --results-directory TestResults
       - name: Preserve test results
         if: always()
         uses: actions/upload-artifact@v4

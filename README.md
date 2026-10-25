@@ -42,6 +42,8 @@ The `linux-core` GitHub Actions job builds/tests on hosted Ubuntu ARM64. The `wi
 
 The current xUnit suite checks evaluated project targets, dependency boundaries and solution membership. It does not implement the 17 racing simulations or verify WPF rendering, overlay/input behavior, SQLite/sync, or real LMU interfaces. Those require their later scoped tasks and, where applicable, the Windows gaming PC. See [ENGINEERING](docs/ENGINEERING.md) for the exact foundation boundaries.
 
+Architecture tests inspect the source checkout recorded in the test assembly at build time. The checkout must remain available; rebuild if it moves. Build outputs can live elsewhere: pass the same `--artifacts-path /tmp/lmu-foundation-artifacts` to restore, build and test for a read-only source checkout. `linux-core` uses external artifacts to guard this workflow.
+
 ## Production stack
 
 - C# / .NET 10 LTS
