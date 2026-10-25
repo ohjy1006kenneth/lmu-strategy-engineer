@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/LmuStrategy.Domain/LmuStrategy.Domain.csproj" />
+    <Project Path="src/LmuStrategy.Strategy/LmuStrategy.Strategy.csproj" />
+    <Project Path="src/LmuStrategy.Simulation/LmuStrategy.Simulation.csproj" />
+    <Project Path="src/LmuStrategy.Persistence/LmuStrategy.Persistence.csproj" />
+    <Project Path="src/LmuStrategy.LmuAdapter/LmuStrategy.LmuAdapter.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/LmuStrategy.Architecture.Tests/LmuStrategy.Architecture.Tests.csproj" />
+  </Folder>
+</Solution>

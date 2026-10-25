@@ -154,6 +154,29 @@ Core projects should target normal `net10.0` and remain runnable on Linux.
 
 The simulator and test doubles must exercise the same strategy APIs used by production, so Hermes can develop and regression-test backend behavior without LMU installed.
 
+### Initial foundation (Issue #2)
+
+`LmuStrategy.Core.slnx` contains the five portable libraries and the architecture test project. `LmuStrategy.slnx` adds the three Windows projects. Both solutions reference the same project files. [README](../README.md#build-the-foundation) provides the reproducible build/test commands.
+
+Current project references are:
+
+| Project (`LmuStrategy.` prefix) | Target | References / responsibility |
+| --- | --- | --- |
+| Domain | net10.0 | No project dependencies; domain types follow in Issue #4 |
+| Strategy | net10.0 | Domain; deterministic strategy boundary |
+| Simulation | net10.0 | Domain, Strategy; future simulator drives production strategy APIs |
+| Persistence | net10.0 | Domain; future storage, no strategy decisions |
+| LmuAdapter | net10.0 | Domain; portable adapter contract boundary |
+| LmuAdapter.Windows | net10.0-windows | Domain, LmuAdapter; future verified native transport |
+| Overlay | net10.0-windows / WPF | Domain, Strategy; presentation boundary |
+| Windows | net10.0-windows / WPF executable | Domain, Strategy, Persistence, LmuAdapter, LmuAdapter.Windows, Overlay; composition root |
+
+The libraries deliberately contain no placeholder racing logic, units, storage schema or game API. Adapter interfaces/capabilities will be defined against the domain snapshots in subsequent tasks; the Windows adapter does not connect to the game. WPF currently compiles only the application bootstrap and an empty overlay resource dictionary. Startup exits without a screen or background service. There is no rendered UI to accept in this foundation.
+
+The xUnit architecture tests evaluate MSBuild properties and project references, including imported settings, to enforce the portable targets and permitted dependency directions. They also guard solution membership. `linux-core` runs them natively on Linux ARM64; `windows-wpf` builds the entire solution and XAML, runs tests, and checks self-contained win-x64 publish. Neither job is proof of visual or real-game behavior. Add meaningful domain and simulation tests as those features are implemented; there are no canonical scenario results yet.
+
+SyncContracts, SyncClient and SyncServer remain future projects. Their canonical boundaries above still apply: shared data contracts only, no UI/native LMU dependency in sync, no server dependency in local strategy, and no live strategy calculation in the server. This foundation neither creates nor deploys a sync service.
+
 ## Runtime data flow
 
 ~~~text

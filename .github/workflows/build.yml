@@ -1,0 +1,61 @@
+name: .NET foundation
+
+on:
+  push:
+    branches: [main, 'symphony/**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  linux-core:
+    name: linux-core
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Verify native ARM64 environment
+        run: |
+          test "$(uname -m)" = aarch64
+          dotnet --info
+      - name: Restore portable solution
+        run: dotnet restore LmuStrategy.Core.slnx
+      - name: Build portable solution
+        run: dotnet build LmuStrategy.Core.slnx --configuration Release --no-restore
+      - name: Test portable solution
+        run: dotnet test LmuStrategy.Core.slnx --configuration Release --no-build --logger trx --results-directory TestResults
+      - name: Preserve test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-core-test-results
+          path: TestResults/*.trx
+
+  windows-wpf:
+    name: windows-wpf
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Restore full solution
+        run: dotnet restore LmuStrategy.slnx
+      - name: Build full solution and WPF XAML
+        run: dotnet build LmuStrategy.slnx --configuration Release --no-restore
+      - name: Test full solution
+        run: dotnet test LmuStrategy.slnx --configuration Release --no-build --logger trx --results-directory TestResults
+      - name: Check self-contained Windows x64 publish
+        run: dotnet publish src/LmuStrategy.Windows/LmuStrategy.Windows.csproj --configuration Release --runtime win-x64 --self-contained true --output out/windows-win-x64
+      - name: Preserve test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-wpf-test-results
+          path: TestResults/*.trx
