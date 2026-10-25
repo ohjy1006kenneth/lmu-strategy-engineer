@@ -156,13 +156,13 @@ The simulator and test doubles must exercise the same strategy APIs used by prod
 
 ### Initial foundation (Issue #2)
 
-`LmuStrategy.Core.slnx` contains the five portable libraries and the architecture test project. `LmuStrategy.slnx` adds the three Windows projects. Both solutions reference the same project files. [README](../README.md#build-the-foundation) provides the reproducible build/test commands.
+`LmuStrategy.Core.slnx` contains the five portable libraries and the architecture/domain test projects. `LmuStrategy.slnx` adds the three Windows projects. Both solutions reference the same project files. [README](../README.md#build-the-foundation) provides the reproducible build/test commands.
 
 Current project references are:
 
 | Project (`LmuStrategy.` prefix) | Target | References / responsibility |
 | --- | --- | --- |
-| Domain | net10.0 | No project dependencies; domain types follow in Issue #4 |
+| Domain | net10.0 | No project dependencies; immutable domain snapshots and unit types |
 | Strategy | net10.0 | Domain; deterministic strategy boundary |
 | Simulation | net10.0 | Domain, Strategy; future simulator drives production strategy APIs |
 | Persistence | net10.0 | Domain; future storage, no strategy decisions |
@@ -171,9 +171,9 @@ Current project references are:
 | Overlay | net10.0-windows / WPF | Domain, Strategy; presentation boundary |
 | Windows | net10.0-windows / WPF executable | Domain, Strategy, Persistence, LmuAdapter, LmuAdapter.Windows, Overlay; composition root |
 
-The libraries deliberately contain no placeholder racing logic, units, storage schema or game API. Adapter interfaces/capabilities will be defined against the domain snapshots in subsequent tasks; the Windows adapter does not connect to the game. WPF currently compiles only the application bootstrap and an empty overlay resource dictionary. Startup exits without a screen or background service. There is no rendered UI to accept in this foundation.
+The foundation libraries contain no placeholder racing logic, storage schema or game API. The Domain library now contains the contracts described below. Adapter interfaces and capability detection will be defined against the domain snapshots in subsequent tasks; the Windows adapter does not connect to the game. WPF currently compiles only the application bootstrap and an empty overlay resource dictionary. Startup exits without a screen or background service. There is no rendered UI to accept in this foundation.
 
-The xUnit architecture tests evaluate MSBuild properties and project references, including imported settings, to enforce the portable targets and permitted dependency directions. They also guard solution membership. `linux-core` runs them natively on Linux ARM64; `windows-wpf` builds the entire solution and XAML, runs tests, and checks self-contained win-x64 publish. Neither job is proof of visual or real-game behavior. Add meaningful domain and simulation tests as those features are implemented; there are no canonical scenario results yet.
+The xUnit architecture tests evaluate MSBuild properties and project references, including imported settings, to enforce the portable targets and permitted dependency directions. They also guard solution membership. `linux-core` runs them natively on Linux ARM64; `windows-wpf` builds the entire solution and XAML, runs tests, and checks self-contained win-x64 publish. Neither job is proof of visual or real-game behavior. Domain unit and roundtrip tests run in both jobs. Add simulation tests as the simulator and solver are implemented; there are no canonical scenario results yet.
 
 SyncContracts, SyncClient and SyncServer remain future projects. Their canonical boundaries above still apply: shared data contracts only, no UI/native LMU dependency in sync, no server dependency in local strategy, and no live strategy calculation in the server. This foundation neither creates nor deploys a sync service.
 
@@ -250,6 +250,24 @@ Use explicit units in names or types:
 - `TyreRemainingPercent`
 
 Do not pass ambiguous unitless doubles across subsystem boundaries when a dedicated value type is practical.
+
+### Domain contracts (Issue #4)
+
+`LmuStrategy.Domain` targets pure `net10.0` and references no other project. Its records use `ImmutableArray<T>` for variable-length collections and `PerWheel<T>` with explicit FL/FR/RL/RR properties for tyre state, wear and replacement. Use `ToImmutableArray()` when taking a snapshot of a caller-owned array; use `[]` for a known empty collection, never a default `ImmutableArray`. Records can be copied with `with`; a copy does not change the original. Immutable arrays use their normal identity equality; compare their contents or serialized values when comparing snapshots.
+
+The public DTOs are `StrategyInput`, `StrategyResult`, `RacePlan`, `Stint`, `Pit`, race/vehicle/weather snapshots, driver-model snapshots, pit-service estimates and capability/evidence records. They contain data, not strategy algorithms, model fitting, game queries or UI. Model snapshots carry typed observed/predicted rates and contextual evidence; future fitted models can extend those contracts without guessing coefficients here.
+
+Units are separate readonly value types. Fuel is litres; durations are nonnegative seconds; time deltas and percentage-point changes can be signed. VE and remaining tyre life are bounded 0..100 percent. VE consumption and tyre wear are **percentage points per lap**, distinct from both percent levels and normalized `Fraction` values (0..1). Lap and individual-tyre counts are nonnegative integers. Floating units reject NaN/infinity. No implicit numeric conversions, percent-to-fraction conversions or Fuel Ratio formulas are supplied. Zero-initialized unit values are valid; a zero value must never stand in for an unavailable observation.
+
+Stint indices and `Pit.AfterStint` are zero based. Start/end/pit lap positions are completed-lap boundaries: `[0, 10)` covers race laps 1 through 10, and the following pit is at boundary 10. This also supports remaining-race plans starting at a later boundary. `LapCount` and plan/pit time totals are derived and excluded from JSON to avoid contradictory duplicate data. Stint driving time excludes any cold-outlap increment already assigned to its preceding pit cost. A plan can contain any number of stints and pits; full ordering, capacity, continuity, legal service and inventory accounting belong to the later shared plan evaluator. DTO construction does **not** certify feasibility or a verified finish-line rule.
+
+A null `Sourced<T>` constraint is unavailable. A supplied empty legal-compound, dry-inventory or legal-service array is known empty, and a supplied zero capacity is a known zero. Each supplied constraint/model has `ModelEvidence` (source, confidence, sample count, descriptive condition coverage, optional extrapolation laps and build/schema identity). Unavailable evidence cannot claim confidence. Nullable observed fuel, VE, tyre compound/life/age and weather fields preserve missing data. A result with unavailable/infeasible status can contain null candidates and projections instead of a fabricated plan.
+
+Compound IDs are opaque and event specific, with explicit Dry/Wet family and no pace ranking. Every corner has its own compound, remaining life and age. Every pit has per-corner replacements; null means keep that corner and a replacement names its new compound. `DryTyreStock` counts **individual dry tyres**, optionally restricted to a corner; null corner means a shared pool. Wet compounds cannot be placed in this inventory. The later adapter must verify and normalize LMU's actual allocation semantics; these contracts claim no knowledge of a current game field, set-to-tyre conversion or legal replacement pattern. `SessionConstraints.LegalTyreServices` carries permitted corner masks explicitly, so representing a replacement does not imply LMU supports it.
+
+`LmuCapabilities` records game/adapter/schema identity and unavailable, verified shared-memory, verified REST, derived or cached status per capability. Missing or duplicate entries resolve to unavailable. It does not probe the game; callers must detect build/schema changes and replace snapshots rather than reuse stale verification.
+
+`DomainJson.Serialize` / `Deserialize<T>` provide a shared JSON policy: camel-case properties, named enums, required constructor arguments, nullable annotation checks, unknown-member rejection and no numeric/unknown enum coercion. Optional fields must appear explicitly as null. Unit constructors also validate deserialized numbers. This is not a versioned persistence/sync wire protocol, and it is not a substitute for the plan evaluator or boundary validation of collection contents. Domain tests cover no-stop and many-stop plans, mixed per-corner replacement, missing versus known-empty constraints, provenance/capability/model/weather snapshots and unavailable strategy results. The 17 canonical racing scenarios remain future simulator work.
 
 ## Persistence model
 
