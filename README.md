@@ -12,9 +12,37 @@ Users access only their own records through a secured HTTPS API. The server is n
 
 ## Status
 
-Product specification and interactive prototype are complete enough to begin production implementation.
+The .NET 10 solution and project boundaries are bootstrapped, with Linux ARM64 core and Windows/WPF CI. The libraries are intentionally empty foundations; domain types are the next task in [Issue #4](https://github.com/ohjy1006kenneth/lmu-strategy-engineer/issues/4).
 
 The current `prototype/index.html` is an **executable UX reference using synthetic data**. It is not the production application.
+
+## Build the foundation
+
+Install a stable .NET 10 SDK for your OS/architecture (`linux-arm64` on the Hermes Pi 5). `global.json` permits stable .NET 10 feature-band updates. From the repository root:
+
+~~~sh
+dotnet --info
+dotnet restore LmuStrategy.Core.slnx
+dotnet build LmuStrategy.Core.slnx --configuration Release --no-restore
+dotnet test LmuStrategy.Core.slnx --configuration Release --no-build
+~~~
+
+These commands run natively on Ubuntu ARM64 without Windows targeting packs, WPF, LMU, databases or services. Initial restore needs access to NuGet. Specify a solution explicitly because the repository contains two solutions.
+
+On Windows with the .NET 10 SDK:
+
+~~~powershell
+dotnet restore LmuStrategy.slnx
+dotnet build LmuStrategy.slnx --configuration Release --no-restore
+dotnet test LmuStrategy.slnx --configuration Release --no-build
+dotnet publish src/LmuStrategy.Windows/LmuStrategy.Windows.csproj --configuration Release --runtime win-x64 --self-contained true --output out/windows-win-x64
+~~~
+
+The `linux-core` GitHub Actions job builds/tests on hosted Ubuntu ARM64. The `windows-wpf` job performs the full solution build, WPF/XAML compilation, tests and self-contained Windows x64 publish check on Windows. Hermes must rely on that Windows job for these checks. The desktop bootstrap exits without opening a window; it is not a usable racing application yet. Publish output is a local CI build check, not a release or installer.
+
+The current xUnit suite checks evaluated project targets, dependency boundaries and solution membership. It does not implement the 17 racing simulations or verify WPF rendering, overlay/input behavior, SQLite/sync, or real LMU interfaces. Those require their later scoped tasks and, where applicable, the Windows gaming PC. See [ENGINEERING](docs/ENGINEERING.md) for the exact foundation boundaries.
+
+Architecture tests inspect the source checkout recorded in the test assembly at build time. The checkout must remain available; rebuild if it moves. Build outputs can live elsewhere: pass the same `--artifacts-path /tmp/lmu-foundation-artifacts` to restore, build and test for a read-only source checkout. `linux-core` uses external artifacts to guard this workflow.
 
 ## Production stack
 
@@ -77,4 +105,4 @@ Each new run overwrites the previous files for that scenario. Do not create time
 
 ## Next step
 
-Follow `docs/HANDOFF.md` and build the production .NET solution, domain model, reusable simulator and initial strategy engine before polishing the WPF UI.
+Continue with [Issue #4](https://github.com/ohjy1006kenneth/lmu-strategy-engineer/issues/4) for the unit-safe domain model, then the reusable simulator and strategy engine in `docs/HANDOFF.md`, before polishing the WPF UI.
