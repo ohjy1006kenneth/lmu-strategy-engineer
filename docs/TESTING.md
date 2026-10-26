@@ -2,6 +2,8 @@
 
 ## Simulation architecture
 
+The portable `LmuStrategy.Strategy.Tests` suite currently exercises the production pit-cost API with clearly synthetic fixtures: splash amounts and decimal roundoff, tyre-only stops, combined versus unsupported composition, marginal tyres, provenance precedence, missing observations, stale snapshots and mismatched context/build identity. It runs through both solution files in the normal CI jobs. These focused tests do not replace the future 17 canonical simulator scenarios or verify real LMU timings/concurrency.
+
 Use **one reusable deterministic race simulator**. Do not write a separate simulator script for every race length or edge case.
 
 A simulation is composed from reusable configuration:
