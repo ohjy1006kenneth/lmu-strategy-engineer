@@ -12,7 +12,7 @@ Users access only their own records through a secured HTTPS API. The server is n
 
 ## Status
 
-The .NET 10 solution and project boundaries are bootstrapped, with Linux ARM64 core and Windows/WPF CI. The portable Domain library now provides immutable race, energy, per-wheel tyre and strategy DTOs with explicit units and JSON roundtrip coverage. Strategy generation, the reusable simulator, persistence and verified LMU adapters remain subsequent tasks.
+The .NET 10 solution and project boundaries are bootstrapped, with Linux ARM64 core and Windows/WPF CI. The portable Domain library provides immutable race, energy, per-wheel tyre and strategy DTOs with explicit units and JSON roundtrip coverage. The portable LMU adapter now provides snapshot/provenance contracts, a compatibility guard and a deterministic scripted source. Strategy generation, the reusable race simulator, persistence and verified real-game transports remain subsequent tasks.
 
 The current `prototype/index.html` is an **executable UX reference using synthetic data**. It is not the production application.
 
@@ -40,7 +40,7 @@ dotnet publish src/LmuStrategy.Windows/LmuStrategy.Windows.csproj --configuratio
 
 The `linux-core` GitHub Actions job builds/tests on hosted Ubuntu ARM64. The `windows-wpf` job performs the full solution build, WPF/XAML compilation, tests and self-contained Windows x64 publish check on Windows. Hermes must rely on that Windows job for these checks. The desktop bootstrap exits without opening a window; it is not a usable racing application yet. Publish output is a local CI build check, not a release or installer.
 
-The current xUnit suites check evaluated project targets, dependency boundaries, solution membership, domain unit bounds, immutable snapshots and JSON roundtrips. They do not implement the 17 racing simulations or verify WPF rendering, overlay/input behavior, SQLite/sync, or real LMU interfaces. Those require their later scoped tasks and, where applicable, the Windows gaming PC. See [ENGINEERING](docs/ENGINEERING.md) for the exact foundation boundaries.
+The current xUnit suites check evaluated project targets, dependency boundaries, solution membership, domain unit bounds, immutable snapshots, JSON roundtrips and adapter contracts (missing data, provenance, disconnect/reconnect and identity changes). They do not implement the 17 racing simulations or verify WPF rendering, overlay/input behavior, SQLite/sync, or real LMU interfaces. Those require their later scoped tasks and, where applicable, the Windows gaming PC. See [ENGINEERING](docs/ENGINEERING.md) for the exact boundaries.
 
 Architecture tests inspect the source checkout recorded in the test assembly at build time. The checkout must remain available; rebuild if it moves. Build outputs can live elsewhere: pass the same `--artifacts-path /tmp/lmu-foundation-artifacts` to restore, build and test for a read-only source checkout. `linux-core` uses external artifacts to guard this workflow.
 

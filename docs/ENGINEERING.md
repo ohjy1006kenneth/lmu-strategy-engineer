@@ -156,7 +156,7 @@ The simulator and test doubles must exercise the same strategy APIs used by prod
 
 ### Initial foundation (Issue #2)
 
-`LmuStrategy.Core.slnx` contains the five portable libraries and the architecture/domain test projects. `LmuStrategy.slnx` adds the three Windows projects. Both solutions reference the same project files. [README](../README.md#build-the-foundation) provides the reproducible build/test commands.
+`LmuStrategy.Core.slnx` contains the five portable libraries and the architecture/domain/adapter test projects. `LmuStrategy.slnx` adds the three Windows projects. Both solutions reference the same project files. [README](../README.md#build-the-foundation) provides the reproducible build/test commands.
 
 Current project references are:
 
@@ -171,7 +171,7 @@ Current project references are:
 | Overlay | net10.0-windows / WPF | Domain, Strategy; presentation boundary |
 | Windows | net10.0-windows / WPF executable | Domain, Strategy, Persistence, LmuAdapter, LmuAdapter.Windows, Overlay; composition root |
 
-The foundation libraries contain no placeholder racing logic, storage schema or game API. The Domain library now contains the contracts described below. Adapter interfaces and capability detection will be defined against the domain snapshots in subsequent tasks; the Windows adapter does not connect to the game. WPF currently compiles only the application bootstrap and an empty overlay resource dictionary. Startup exits without a screen or background service. There is no rendered UI to accept in this foundation.
+The foundation libraries contain no placeholder racing logic, storage schema or game API. The Domain library contains the contracts described below. The portable adapter implements the snapshot contracts and compatibility validation described in the LMU adapter section; the Windows adapter does not connect to the game. WPF currently compiles only the application bootstrap and an empty overlay resource dictionary. Startup exits without a screen or background service. There is no rendered UI to accept in this foundation.
 
 The xUnit architecture tests evaluate MSBuild properties and project references, including imported settings, to enforce the portable targets and permitted dependency directions. They also guard solution membership. `linux-core` runs them natively on Linux ARM64; `windows-wpf` builds the entire solution and XAML, runs tests, and checks self-contained win-x64 publish. Neither job is proof of visual or real-game behavior. Domain unit and roundtrip tests run in both jobs. Add simulation tests as the simulator and solver are implemented; there are no canonical scenario results yet.
 
@@ -376,6 +376,20 @@ Persist:
 - capability flags
 
 On schema/build change, fail closed: unknown/missing fields become unavailable rather than being silently reinterpreted.
+
+### Portable snapshot contract (Issue #9)
+
+`ILmuSnapshotSource.ReadSnapshot()` returns one immutable `LmuSnapshot`. It includes session identity/timing/control/weather, vehicle capacities, live Fuel/VE/Fuel Ratio/per-corner tyres, opponent scoring, forecast, individual dry-tyre inventory, available compounds, compound-condition recommendations, legal tyre services and contextual pit-service estimates. These use Domain unit/tyre/weather types. Optional fields inside those payloads remain explicitly unknown; opponent compound is never inferred from rain. Empty pit-estimate models mean unavailable. Other known-empty lists use initialized `ImmutableArray.Empty`; default arrays are unavailable.
+
+Each supplied field uses `SnapshotValue<T>` with a `CapabilityStatus` and `ValueProvenance`: full integration identity, session-instance ID, observation time, source kind, source reference and mapping/derivation semantics. Verified shared-memory and REST statuses must match their source kind. Derived observations include explicitly synthetic fixtures. Cached values preserve the original source and observation time; a fixture cannot claim verified LMU provenance. `IsAvailable`/`TryGetValue` distinguish missing data from zero or empty; accessing `Value` when unavailable throws. No default capacities, forecasts or inventory are manufactured. A status describes origin, not prediction confidence or permission to use derived values as verified hard constraints.
+
+Consumers wrap a transport in `CompatibleLmuSource`, configured with an explicitly accepted `IntegrationIdentity`. Game build, adapter version and schema version must all be known and match exactly; optional physics/BOP identifiers also participate in equality. No real build or field mapping is verified by this task. A future native/REST transport must validate its raw schema before interpreting fields and supply truthful mapping evidence; this guard validates its declared metadata, not LMU itself. The snapshot contracts are currently in-memory APIs, not a native layout, persistence format or sync protocol.
+
+The guard makes every field unavailable on disconnect, unknown session identity, incompatible build/schema or replayed/non-advancing snapshot time. Within an otherwise valid snapshot, foreign-session/build, future-dated and unmarked older observations become unavailable individually. Non-cached observations must share the snapshot capture time. Explicitly cached static session identity/duration, capacities, forecast, inventory, compounds, tyre services and contextual pit estimates may retain older observation times within the same session and integration identity. Live telemetry, scoring, session progress, control and current weather cannot be cached. Cache age and whether a contextual estimate fits a strategy request remain visible to downstream policy; the adapter supplies no universal expiry or solver fallback. On telemetry loss, the strategy consumer retains its last valid state/plan without learning from missing samples. Reconnect supplies a later capture time and fresh live observations; the adapter never replays a last value as current. Sources and their guards are single-consumer.
+
+`LmuSnapshot.Capabilities` provides the existing serializable Domain `LmuCapabilities` summary (including game/adapter/schema identity). Session and telemetry group flags are deliberately conservative: partial or mixed-status groups report unavailable, while individual supported fields remain usable with their own evidence. Opponent timing support never implies opponent compound support. Store the summary with the corresponding field provenance when persistence is implemented.
+
+`ScriptedLmuSource` accepts an immutable copy of a finite snapshot script and reports disconnect after exhaustion. Use the same guarded interface for fixtures and future transports. It has no LMU, WPF, native-handle, network or database dependency and runs in the native ARM64 `LmuStrategy.LmuAdapter.Tests` suite in both solutions. Contract tests cover partial/missing values, known-empty inventory, source classification, valid caching, disconnect/reconnect, stale replay and session/build/schema changes. They are not the reusable race simulator, a real LMU integration test or proof of UI behavior.
 
 ## Fuel capacity
 

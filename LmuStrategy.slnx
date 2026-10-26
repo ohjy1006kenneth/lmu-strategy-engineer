@@ -12,5 +12,6 @@
   <Folder Name="/tests/">
     <Project Path="tests/LmuStrategy.Architecture.Tests/LmuStrategy.Architecture.Tests.csproj" />
     <Project Path="tests/LmuStrategy.Domain.Tests/LmuStrategy.Domain.Tests.csproj" />
+    <Project Path="tests/LmuStrategy.LmuAdapter.Tests/LmuStrategy.LmuAdapter.Tests.csproj" />
   </Folder>
 </Solution>

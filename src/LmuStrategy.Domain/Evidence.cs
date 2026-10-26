@@ -51,6 +51,7 @@ public enum CapabilityId
 {
     Telemetry, FuelCapacity, VeCapacity, Forecast, DryTyreInventory, LegalCompounds,
     TyreServiceOptions, PitEstimate, FuelRatioMapping, OpponentTiming, OpponentCompound,
+    Session, RecommendedCompoundConditions,
 }
 public sealed record CapabilityState(CapabilityId Id, CapabilityStatus Status, string? Details);
 
@@ -59,8 +60,10 @@ public sealed record LmuCapabilities(IntegrationIdentity Identity, ImmutableArra
 {
     public CapabilityStatus StatusOf(CapabilityId id)
     {
+        if (!Enum.IsDefined(id) || Entries.IsDefaultOrEmpty) return CapabilityStatus.Unavailable;
         var matches = Entries.Where(entry => entry.Id == id).ToArray();
         // Conflicting or duplicate reports must not turn into an arbitrary positive capability.
-        return matches.Length == 1 ? matches[0].Status : CapabilityStatus.Unavailable;
+        return matches.Length == 1 && Enum.IsDefined(matches[0].Status)
+            ? matches[0].Status : CapabilityStatus.Unavailable;
     }
 }
