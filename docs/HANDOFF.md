@@ -1,22 +1,30 @@
 # Hermes Orchestration Handoff
 
-## Read first
+## Task-scoped reading
 
-This repository is ready to move from product prototype to production implementation.
+Do not load the entire engineering/research/reference package into
+every implementation session. Begin with the assigned GitHub issue,
+its Kanban card, previous checkpoint and relevant actual source/tests.
 
-Read these files in order:
+- Read `README.md` and the **relevant section** of this handoff.
+- Product/UX: `docs/PRODUCT.md` and `prototype/index.html` only if
+  the task affects the user-facing interaction. The prototype uses
+  synthetic data and temporary equations.
+- Architecture/persistence/LMU adapters: `docs/ENGINEERING.md`.
+- Strategy math: `docs/BACKEND.md`.
+- Simulation/acceptance: `docs/TESTING.md`.
+- Unknown external LMU capability: `docs/RESEARCH.md` and actual
+  verified evidence.
 
-1. `README.md`
-2. `docs/PRODUCT.md`
-3. `docs/ENGINEERING.md`
-4. `docs/BACKEND.md`
-5. `docs/TESTING.md`
-6. `docs/RESEARCH.md`
-7. `prototype/index.html`
+Preserve previously accepted work and existing issue/card/branch/PR
+identity. After an interrupted session, resume only the missing
+step rather than restarting the plan.
 
-If the prototype conflicts with the documentation, follow the documentation. The prototype contains synthetic data and temporary equations.
+If the prototype conflicts with the canonical documentation, follow
+the documentation and surface any unresolved product decision.
 
-Do **not** create or modify `AGENTS.md`. The repository owner manages that separately.
+Do **not** create or modify `AGENTS.md`. The repository owner manages
+it separately.
 
 ## Mission
 
