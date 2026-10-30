@@ -92,19 +92,101 @@ Use:
 
 Keep Windows-only code isolated so Linux development never blocks backend work.
 
-## Autonomous development ownership
+## Autonomous development ownership — Hermes Kanban
 
-This repository is one of three projects managed by a single Hermes multiplexed gateway. LMU has four dedicated profiles: lmu-lead, lmu-implementer, lmu-code-reviewer, and lmu-visual-reviewer. Only the lead needs direct Discord routing; collaboration evidence belongs in linked Hermes Kanban cards, and GitHub Issues/PRs/CI are the durable integration record.
+The adopted software-development architecture uses GitHub Issues for
+requirements/acceptance, Hermes Kanban for priority/dependency/execution
+state, a deterministic Kanban dispatcher and a **single active
+implementation task** in an isolated workspace. It replaces the
+previous four permanent LMU profiles and Symphony-triggered development
+jobs. Historic Symphony branches and existing PRs are preserved.
 
-Role model preferences (verify availability in the installed Hermes version):
-- Lead: GPT-6.1 Sol (high), fallback Kimi K2.8 Preview.
-- Implementer: Kimi K3-256K (high), fallback GPT-6 Luna.
-- Code reviewer: GPT-6.1 Sol (high), fallback Kimi K2.8 Preview.
-- Visual reviewer: Kimi K2.8 Preview (high), fallback GPT-6 Luna.
+Target role names for this project's analogous Hermes workflow are
+`lmu-lead` and `lmu-dev` **when configured**, not an instruction to
+create profiles without an approved installation. The owner has
+specified a **10 a.m./10 p.m. planning cadence for CupMemo only**;
+verify or request the LMU lead cadence separately rather than copying
+it. A scheduled lead handles issue decomposition, acceptance criteria,
+Kanban priorities/dependency gates and review/merge handoffs; no
+permanent LLM coordination conversation is required.
 
-The two Codex credentials are one provider pool; a role gets exactly one fallback model. Follow provider usage terms: do not use a membership credential for prohibited unattended work. If no compliant provider is available, persist state and retry rather than skipping review.
+```text
+You / ChatGPT / GitHub Issues
+            |
+            v
+lmu-lead — scheduled planning (LMU cadence to verify)
+            |-- GitHub requirements and acceptance criteria
+            +-- Hermes Kanban priority, dependencies, state
+                                      |
+                                      v
+                          Deterministic dispatcher
+                                      |
+                                      v
+                                lmu-dev
+                       One leased implementation task
+                       Isolated branch and workspace
+                                      |
+                                      v
+                         Hermes openai-codex
+                           Credential A -> B
+                                      |
+                                      v
+                            GitHub PR + CI
+                                      |
+                                      v
+                       Review and merge gates
+                                      |
+                                      v
+                 Windows app / server release gates
+```
 
-The external continuity controller owns dispatch/reconciliation across task completions, provider cooldowns, reviewer handoffs and restarts; it must not assume a lead chat remains running. Work in isolated branches, apply deterministic tests and independent code and visual reviews, and check actual Windows/WPF artifacts rather than claiming Linux renders represent WPF. Keep a single heavy worker globally on the Pi initially. Preserve the repo's instruction not to create or edit AGENTS.md.
+**Division of responsibility:**
+
+- GitHub is the durable **source of requirements**, architecture
+  decisions, acceptance evidence and final outcome. One root Kanban
+  card maps to one GitHub Issue; Kanban is not a second product backlog.
+- The `lmu-lead` owns bounded planning, dependency admission,
+  acceptance/review and GitHub lifecycle, including reconciling existing
+  branches/PRs. It cannot invent game-data capabilities, merge bypasses
+  or live server permissions.
+- The `lmu-dev` implements one issue at a time in a stable isolated
+  branch/workspace, runs relevant portable tests and creates/updates
+  **one** linked PR. It must not approve or merge its own PR.
+- The `openai-codex` provider uses separately authorized credential
+  pool **A -> B** only for verifiable ordinary quota/capacity shortfall
+  and only if supported by the installed Hermes runtime and provider
+  terms. Never use account switching to bypass an actual provider
+  safety refusal or missing permission. If all permitted capacity is
+  unavailable, preserve state and wait.
+- A **deterministic, non-LLM supervisor** owns worker liveness,
+  cooldowns, persisted attempt limits, leases, restart reconciliation,
+  duplicate suppression and safe resumption. It must respect the
+  actual shared Pi-wide capacity gate. It is not a code reviewer or a
+  permanent project-lead agent.
+- Review and merge require the actual current-head required GitHub CI
+  and appropriate independent technical/security/visual evidence.
+  Windows WPF, wheel inputs and real LMU interfaces cannot be
+  established by Linux-only CI; those remain Windows/physical-device
+  acceptance gates.
+- Deployment of the public sync server and distribution of the Windows
+  client are **separate, independently gated outcomes**. A merged PR,
+  passing Linux build or already-running Pi service is not public
+  product acceptance.
+
+**Identity and recovery:** Use `ohjy1006kenneth/lmu-strategy-engineer#N`
+as the durable GitHub issue key and record the real Kanban card ID,
+assigned branch, PR URL/head SHA, attempts and checkpoint. Before
+dispatch, reconcile the existing claim, issue, card, workspace, remote
+branch and any PR, **including already-open PR #38 and PR #39**. Their
+`symphony/GH-*` names are historical identities, not permission to
+rename/delete them or open duplicate PRs. Do not create another worker
+because the previous run is quiet; terminate or reconcile the exact
+process and lease first.
+
+The owner maintains `README.md` and these six canonical project docs.
+The existing instruction **not to create or modify `AGENTS.md`**
+remains in force. Do not introduce extra developer/reviewer profile
+roles simply to mimic historical descriptions.
 
 ## Public sync delivery boundary
 

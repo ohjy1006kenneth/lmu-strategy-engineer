@@ -2,6 +2,11 @@
 
 This document defines the **production technology and architecture boundaries**.
 
+Coding agents are governed separately by the Hermes Kanban lead/developer,
+non-LLM supervisor, and GitHub PR/CI workflow in [HANDOFF.md](HANDOFF.md).
+Changing coding orchestration does not change the native Windows/WPF app,
+offline strategy computation, per-user SQLite storage or Pi HTTPS sync API.
+
 For strategy equations, candidate generation, plan scoring and backend function contracts, use **[BACKEND.md](BACKEND.md)**.
 
 ## Technology stack

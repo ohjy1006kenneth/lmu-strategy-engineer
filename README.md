@@ -10,6 +10,24 @@ Each registered user owns an isolated local SQLite database on their desktop and
 
 Users access only their own records through a secured HTTPS API. The server is not a shared SQLite file and does not expose SMB/database ports to the public. Authentication, synchronization, consent, account deletion, database backups, and outage recovery are **public-release requirements**, not implemented features yet. See [PRODUCT](docs/PRODUCT.md), [ENGINEERING](docs/ENGINEERING.md), and [TESTING](docs/TESTING.md).
 
+## Autonomous engineering workflow
+
+Planning and implementation follow the **Hermes Kanban lead/developer
+architecture**, not the old four-agent profile model:
+
+GitHub Issues -> scheduled `lmu-lead` planning (schedule to verify) ->
+Hermes Kanban -> deterministic dispatcher -> one `lmu-dev` task ->
+Hermes `openai-codex` credential pool A then B (capacity only) ->
+GitHub PR/CI -> reviewed merge -> separately verified Windows and Pi
+release gates.
+
+A non-LLM supervisor handles liveness, quota cooldowns and restart
+reconciliation. Keep existing historical Symphony PRs and attempts;
+do not start new duplicate work. The 10 a.m./10 p.m. planning cadence
+specified for **CupMemo** does not automatically apply to LMU.
+See [HANDOFF](docs/HANDOFF.md). This policy does not install profiles
+or activate a service.
+
 ## Status
 
 The .NET 10 solution and project boundaries are bootstrapped, with Linux ARM64 core and Windows/WPF CI. The portable Domain library now provides immutable race, energy, per-wheel tyre and strategy DTOs with explicit units and JSON roundtrip coverage. Strategy generation, the reusable simulator, persistence and verified LMU adapters remain subsequent tasks.
